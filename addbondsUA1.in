@@ -1,0 +1,29 @@
+atom_style	molecular
+units		real
+
+pair_style	lj/cut	14
+bond_style	harmonic
+
+read_data  	TrialInfa1iPP.data  extra/special/per/atom 13 extra/bond/per/atom 5
+
+
+angle_style	harmonic
+dihedral_style	multi/harmonic
+pair_modify	mix arithmetic tail yes
+
+pair_coeff      * *    0.09141    3.95000  # dummy variables
+#
+# # Bond Coeffs
+#
+bond_coeff      *  260.00013    1.54000  # c4h2,c4h2
+#bond_coeff	2  260.00013    1.54000
+#
+timestep	1
+
+fix		1 all bond/create 1 1 1 2 1 
+
+thermo_style	custom step f_1[1] f_1[2] 
+thermo		1
+run		100
+
+write_data 	TrialInfa1iPPbonds.data
