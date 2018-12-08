@@ -33,26 +33,34 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #rcoords[:,1] = [0, 0.5, 0, 0.5, 0, 0.5, 0, 0.5]
     #rcoords[:,2] = [0, 0, 0, 0, 0.5, 0.5, 0.5, 0.5 ]
     #rcoords = np.array([[0,0,0]])
-    symmetries = np.array([[1,1,1], [-1,-1,-1], [1,-1+0.5, 1+0.5], [-1, 1+0.5, -1+0.5]])
+    symmetries = np.array([[1,1,1],[-1,-1,-1],[1,-1+0.5, 1+0.5], [-1, 1+0.5, -1+0.5]])
     count = 1
     mol = 1
+    unitcell = np.zeros((len(rcoords)*len(symmetries),3))
+    ucount = 0
+    for s in range(len(symmetries)):
+        for ci in range(len(rcoords)):
+            unitcell[ucount,0] = symmetries[s][0]*a + rcoords[ci][0]*a
+            unitcell[ucount,1] = symmetries[s][1]*b + rcoords[ci][1]*b
+            unitcell[ucount,2] = symmetries[s][2]*c + rcoords[ci][2]*c
+            ucount = ucount + 1
+   
+    
     for k in range(Rz):
-        basez =k*c*zoffset
-        #basez = k*c
+        #basez =k*c*zoffset
+        basez = k*c*3
         for j in range(Ry):
-            basey = j*b
+            basey = j*b*3
             for i in range(Rx):
-                basex = i*a + xoffset*k*c
-                #basex  = i*a
-                for s in range(len(symmetries)):
-                    mol = 1 + s + k*len(symmetries)
-                    for ci in range(len(rcoords)):
-                        x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)
-                        #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a)
-                        y = basey + symmetries[s][1]*b + rcoords[ci][1]*b
-                        z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
-                        #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)
-                        atomsinfo.append([count, mol, atype[ci], x, y, z])
+                #basex = i*a + xoffset*k*c
+                basex  = i*a*2
+                for ci in range(len(unitcell)):
+                        #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)
+                        x = basex + unitcell[ci,0]
+                        y = basey + unitcell[ci,1]
+                        #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
+                        z = basez + unitcell[ci,2]
+                        atomsinfo.append([count, 1, 1, x, y, z])
                         count = count + 1
                     
 
@@ -92,7 +100,19 @@ def readlammpsbondsPPctypes(filename,newfile):
     #write new lammps data with just atoms 
     msc.writelammpsdatajustatoms(newfile, boxcoords, Cmasstypes, len(atomsinfo), atomsinfo)
         
-
+def calculatebondlengths(filename):
+    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata(filename)
+    bondlengths = np.zeros(len(bondsinfo))
+    for i in range(len(bondsinfo)):
+        bond = bondsinfo[i,:]
+        atom1 = int(bond[2] -1)
+        atom2 = int(bond[3] -1)
+        coords1 = atomsinfo[atom1,3:6]
+        coords2 = atomsinfo[atom2,3:6]
+        dist = (sum((coords1 - coords2)**2))**0.5
+        print("dist", dist)
+        bondlengths[i] = dist
+    return bondlengths
 def readxyz(filename):
     count = 0 
     with open(filename, 'r') as f:
@@ -121,10 +141,14 @@ def readxyz(filename):
     return atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi
 
 def main():
-    readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPCtype.data")
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 1, 1, 10)
+    #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPCtype.data")
+
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPPS.xyz", 2, 2, 10)
     
-    msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
+    msc.writelammpsdatajustatoms("TrialInfa1iPPS.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = readxyz("custompp-iso.xyz")
     #msc.writelammpsdatajustatoms("custompp-iso.data", [xlo, xhi, ylo, yhi, zlo, zhi], [14, 1], len(atomsinfo), atomsinfo)
+    #bonds1 = calculatebondlengths("TrialInfa1iPPbonds.data")
+    #bonds2 = calculatebondlengths("TrialInfa1iPPSbonds.data")
+    #print(bonds1 - bonds2)
 main()
