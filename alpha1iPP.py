@@ -121,7 +121,7 @@ def readxyz(filename):
     return atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi
 
 def main():
-    #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPCtype.data")
+    readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPCtype.data")
     atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 1, 1, 10)
     
     msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
