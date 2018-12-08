@@ -34,13 +34,9 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #rcoords[:,2] = [0, 0, 0, 0, 0.5, 0.5, 0.5, 0.5 ]
     #rcoords = np.array([[0,0,0]])
     symmetries = np.array([[1,1,1], [-1,-1,-1], [1,-1+0.5, 1+0.5], [-1, 1+0.5, -1+0.5]])
+    
     count = 1
     mol = 1
-
-    unitcell = np.zeros((len(rcoords)*len(symmetries)))
-    for s in range(len(symmetries)):
-        for ci in range(len(rcoords)):
-        
     for s in range(len(symmetries)):
         mol = 1 + s
         for k in range(Rz):
@@ -49,14 +45,16 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
             for j in range(Ry):
                 basey = j*b
                 for i in range(Rx):
-                    #basex = i*a + xoffset*k*c
+                    #basex = i*a + xoffset*k*c*a 
                     basex  = i*a
                     for ci in range(len(rcoords)):
-                        #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)
-                        x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a)
-                        y = basey + symmetries[s][1]*b + rcoords[ci][1]*b
+                        #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)*a
+                        x = basex + (rcoords[ci][0]*a*np.sign(symmetries[s][0]) + symmetries[s][0]*a)
+                        #print("x", x,"basex", basex, "symmetries[s][0]*a", symmetries[s][0]*a, "symmetries[s][0]", symmetries[s][0])
+                        y = basey + (rcoords[ci][1]*b*np.sign(symmetries[s][1]) + symmetries[s][1]*b)
+                        print("y", y, "basey", basey, "symmetries[s][1]*b", symmetries[s][1]*b, "symmetries[s][1]", symmetries[s][1])
                         #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
-                        z = basez + ( symmetries[s][2]*c + rcoords[ci][2]*c)
+                        z = basez + (rcoords[ci][2]*c*np.sign(symmetries[s][2]))+ symmetries[s][2]*c
                         atomsinfo.append([count, mol, atype[ci], x, y, z])
                         count = count + 1
                     
@@ -126,8 +124,8 @@ def readxyz(filename):
     return atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi
 
 def main():
-    readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPCtype.data")
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 2,2,2)
+    #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPCtype.data")
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 4, 4, 10)
     
     msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = readxyz("custompp-iso.xyz")
