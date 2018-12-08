@@ -28,35 +28,71 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     rcoords[:,1] = [float(i) for i in "0.2291 0.1592 0.1602 0.0589 0.0928 0.0854 0.0797 0.1156 0.1221".split()]
     rcoords[:,2] = [float(i) for i in "0.2004 0.2788 0.5098 0.4941 0.6057 0.8428 0.9260 0.9730 1.2109".split()]
     #rcoords = np.zeros((8,3))
+    widthy = max(rcoords[:,1]) - min(rcoords[:,1])
+    widthx = max(rcoords[:,0]) - min(rcoords[:,0])
+    print("widthx", widthx)
+    print("widthy",widthy)
+    spacing = widthy
+    print("widthy*4",widthy*4)
 
     #rcoords[:,0] = [0, 0, 0.5, 0.5, 0, 0, 0.5, 0.5]
     #rcoords[:,1] = [0, 0.5, 0, 0.5, 0, 0.5, 0, 0.5]
     #rcoords[:,2] = [0, 0, 0, 0, 0.5, 0.5, 0.5, 0.5 ]
     #rcoords = np.array([[0,0,0]])
     symmetries = np.array([[1,1,1], [-1,-1,-1], [1,-1+0.5, 1+0.5], [-1, 1+0.5, -1+0.5]])
-    
+    symmetriesM = np.array([[1,1,1], [-1,-1,-1], [1, 1, 1], [-1, -1,-1]])
+    symmetriesA = np.array([[1,spacing,0], [1,2 - spacing,1], [0, 1+widthy , 0], [0, 1-widthy , 1]])
+    #symmetriesNewM = np.array([[1,1,1],[-1,-1,-1],[1,-1,1],[-1,1,-1]])
+    #symmetriesNewA = np.array([[]])
+    unitcell = np.zeros((len(symmetries)*len(rcoords),3))
+    ucount = 0
+    for s in range(len(symmetries)):
+        print("symmetries", symmetries[s])
+        for ci in range(len(rcoords)):
+            #unitcell[ucount,0] = rcoords[ci,0]*np.sign(symmetries[s,0]) + np.sign(symmetries[s,0])*abs(abs(symmetries[s,0])-1) 
+            unitcell[ucount, 0] = rcoords[ci,0]*symmetriesM[s,0] + symmetriesA[s,0]
+            unitcell[ucount, 1] = rcoords[ci,1]*symmetriesM[s,1] + symmetriesA[s,1]
+            unitcell[ucount, 2] = rcoords[ci,2]*symmetriesM[s,2] + symmetriesA[s,2]
+            #unitcell[ucount,1] = rcoords[ci,1]*np.sign(symmetries[s,1]) + np.sign(symmetries[s,1])*abs(abs(symmetries[s,1])-1)
+            #unitcell[ucount,2] = rcoords[ci,2]*np.sign(symmetries[s,2]) + np.sign(symmetries[s,2])*abs(abs(symmetries[s,2])-1)
+            print("unitcell[ucount]", unitcell[ucount])
+            ucount +=1
+    print("unitcell", unitcell) 
+    center= np.zeros(3)
+    center[0] = min(unitcell[:,0]) + (max(unitcell[:,0]) - min(unitcell[:,0]))/2
+    center[1] = min(unitcell[:,1]) + (max(unitcell[:,1]) - min(unitcell[:,1]))/2
+    print('min y', min(unitcell[:,1])*b, 'max y', max(unitcell[:,1])*b, 'center y', center[1]*b)
+    center[2] = min(unitcell[:,2]) + (max(unitcell[:,2]) - min(unitcell[:,2]))/2
+    print("center", center)
     count = 1
     mol = 1
-    for s in range(len(symmetries)):
-        mol = 1 + s
-        for k in range(Rz):
-            #basez =k*c*zoffset
-            basez = k*c
-            for j in range(Ry):
-                basey = j*b
-                for i in range(Rx):
-                    #basex = i*a + xoffset*k*c*a 
-                    basex  = i*a
-                    for ci in range(len(rcoords)):
+    for k in range(Rz):
+        #basez =k*c*zoffset
+        basez = k*c
+        for j in range(Ry):
+            basey = j*b*2
+            for i in range(Rx):
+                #basex = i*a + xoffset*k*c*a 
+                basex  = i*a*2
+                for ci in range(len(unitcell)):
+                        mol = ci//9 + 1
                         #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)*a
-                        x = basex + (rcoords[ci][0]*a*np.sign(symmetries[s][0]) + symmetries[s][0]*a)
+                        x = basex + unitcell[ci,0]*a
                         #print("x", x,"basex", basex, "symmetries[s][0]*a", symmetries[s][0]*a, "symmetries[s][0]", symmetries[s][0])
-                        y = basey + (rcoords[ci][1]*b*np.sign(symmetries[s][1]) + symmetries[s][1]*b)
-                        print("y", y, "basey", basey, "symmetries[s][1]*b", symmetries[s][1]*b, "symmetries[s][1]", symmetries[s][1])
+                        y = basey + unitcell[ci,1]*b
+                        #print("y", y, "basey", basey, "symmetries[s][1]*b", symmetries[s][1]*b, "symmetries[s][1]", symmetries[s][1])
                         #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
-                        z = basez + (rcoords[ci][2]*c*np.sign(symmetries[s][2]))+ symmetries[s][2]*c
-                        atomsinfo.append([count, mol, atype[ci], x, y, z])
+                        z = basez + unitcell[ci,2]*c
+                        atomsinfo.append([count, mol, 1, x, y, z])
                         count = count + 1
+                #atomsinfo.append([count, mol, 2, basex+ center[0]*a, basey + center[1]*b, basez + center[2]*c])
+                #count = count + 1
+                #atomsinfo.append([count, mol, 3, basex, basey, basez])
+                #count = count + 1
+                #atomsinfo.append([count, mol, 3, basex, basey+2*b, basez])
+                #count = count + 1
+                #atomsinfo.append([count, mol, 3, basex+2*a, basey, basez])
+                #count = count + 1
                     
 
     atomsinfo = np.array(atomsinfo)
@@ -67,12 +103,12 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #xhi =  (Rx+1)*a
     #yhi = (Ry+1)*b*(1.5)
     #zhi = (Rz+1)*c*(1.5)
-    xlo = min(atomsinfo[:,3]) - 5
-    xhi = max(atomsinfo[:,3]) + 5
-    ylo = min(atomsinfo[:,4]) - 5
-    yhi = max(atomsinfo[:,4]) + 5
-    zlo = min(atomsinfo[:,5]) - 5
-    zhi = max(atomsinfo[:,5]) + 5
+    xlo = min(atomsinfo[:,3]) - 0.1*a
+    xhi = max(atomsinfo[:,3]) + 0.1*a
+    ylo = min(atomsinfo[:,4]) - 0.1*b
+    yhi = max(atomsinfo[:,4]) + 0.1*b
+    zlo = min(atomsinfo[:,5]) - 0.1*c
+    zhi = max(atomsinfo[:,5]) + 0.1*c
     return atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi
 
 def readlammpsbondsPPctypes(filename,newfile):
@@ -125,7 +161,7 @@ def readxyz(filename):
 
 def main():
     #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPCtype.data")
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 4, 4, 10)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 2, 2, 10)
     
     msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = readxyz("custompp-iso.xyz")
