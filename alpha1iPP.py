@@ -37,21 +37,21 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     count = 1
     mol = 1
     for k in range(Rz):
-        #basez =k*c*zoffset
-        basez = k*c
+        basez =k*c*zoffset
+        #basez = k*c
         for j in range(Ry):
             basey = j*b
             for i in range(Rx):
-                #basex = i*a + xoffset*k*c*a 
-                basex  = i*a
+                basex = i*a + xoffset*k*c
+                #basex  = i*a
                 for s in range(len(symmetries)):
                     mol = 1 + s + k*len(symmetries)
                     for ci in range(len(rcoords)):
-                        #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)*a
-                        x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a)
+                        x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)
+                        #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a)
                         y = basey + symmetries[s][1]*b + rcoords[ci][1]*b
-                        #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
-                        z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)
+                        z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
+                        #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)
                         atomsinfo.append([count, mol, atype[ci], x, y, z])
                         count = count + 1
                     
