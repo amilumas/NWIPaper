@@ -18,8 +18,8 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     c = 6.50
     atype = [1, 1, 1, 1, 1, 1, 1, 1, 1]
     beta = 99.5
-    #diffangle = 0
-    diffangle = 99.5 - 90
+    diffangle = 0
+    #diffangle = 99.5 - 90
     #find unit vector of new c axis
     zoffset = np.cos(math.radians(diffangle))
     xoffset = -np.sin(math.radians(diffangle))
@@ -40,9 +40,12 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #rcoords[:,1] = [0, 0.5, 0, 0.5, 0, 0.5, 0, 0.5]
     #rcoords[:,2] = [0, 0, 0, 0, 0.5, 0.5, 0.5, 0.5 ]
     #rcoords = np.array([[0,0,0]])
+    xnegmin = min(-rcoords[:,0])
+    xposmin = min(rcoords[:,0])
+    diffxmin = xposmin - xnegmin
     symmetries = np.array([[1,1,1], [-1,-1,-1], [1,-1+0.5, 1+0.5], [-1, 1+0.5, -1+0.5]])
-    symmetriesM = np.array([[1,1,1], [-1,-1,-1], [1, 1, 1], [-1, -1,-1]])
-    symmetriesA = np.array([[1,spacing,0], [1,2 - spacing,1], [0, 1+spacing , 0], [0, 1-spacing , 1]])
+    symmetriesM = np.array([[1,1,1], [-1, -1, -1], [1, 1, 1], [-1, -1, -1]])
+    symmetriesA = np.array([[1,spacing,0], [diffxmin, 1-spacing, 1], [0, 1+spacing, 0], [1+diffxmin, 2- spacing, 1]])
     #symmetriesNewM = np.array([[1,1,1],[-1,-1,-1],[1,-1,1],[-1,1,-1]])
     #symmetriesNewA = np.array([[]])
     unitcell = np.zeros((len(symmetries)*len(rcoords),3))
@@ -60,6 +63,21 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
             print("unitcell[ucount]", unitcell[ucount])
             ucount +=1
     print("unitcell", unitcell) 
+    #calculate distances between ends:
+    #pairs in unit cells
+    ends1s = [unitcell[8], unitcell[17], unitcell[26], unitcell[35]]
+    ends2s = [unitcell[9], unitcell[18], unitcell[27], [unitcell[0,0], unitcell[0,1]+2, unitcell[0,2]]]
+    for i in range(len(ends1s)):
+        print("end1", ends1s[i], "end2", ends2s[i])
+        xdist = (ends1s[i][0] - ends2s[i][0])*a
+        ydist = (ends1s[i][1] - ends2s[i][1])*b
+        zdist = (ends1s[i][2] - ends2s[i][2])*c
+        print("xdist", xdist, "ydist", ydist, "zdist", zdist)
+        dist = (xdist**2 + ydist**2 + zdist**2)**0.5
+        print("connection", i+1, "dist", dist)
+
+
+
     center= np.zeros(3)
     center[0] = min(unitcell[:,0]) + (max(unitcell[:,0]) - min(unitcell[:,0]))/2
     center[1] = min(unitcell[:,1]) + (max(unitcell[:,1]) - min(unitcell[:,1]))/2
@@ -99,18 +117,24 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
 
     atomsinfo = np.array(atomsinfo)
     writexyz(xyzfile, atomsinfo)
+    xlo = min(atomsinfo[:,3]) - 5
+    xhi = max(atomsinfo[:,3]) + 5
+    ylo = min(atomsinfo[:,4]) - 5
+    yhi = max(atomsinfo[:,4]) + 5
+    zlo = min(atomsinfo[:,5]) - 5
+    zhi = max(atomsinfo[:,5]) + 5
     #xlo = -(Rx+1)*a
     #ylo = -(Ry+1)*b
     #zlo = -(Rz+1)*c
     #xhi =  (Rx+1)*a
     #yhi = (Ry+1)*b*(1.5)
     #zhi = (Rz+1)*c*(1.5)
-    xlo = -2*a + Rx*c*zoffset
-    xhi = Rx*a 
-    ylo = -2*b
-    yhi = Rx*b
-    zlo = -2*c*zoffset
-    zhi = Rz*c*zoffset
+    #xlo = -2*a + Rx*c*zoffset
+    #xhi = Rx*a 
+    #ylo = -2*b
+    #yhi = Rx*b
+    #zlo = -2*c*zoffset
+    #zhi = Rz*c*zoffset
     return atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi
 
 def readlammpsbondsPPctypes(filename,newfile):
@@ -162,8 +186,8 @@ def readxyz(filename):
     return atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi
 
 def main():
-    #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPCtype.data")
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 10, 10, 10)
+    readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPC1type.data")
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 1, 1, 1)
     
     msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = readxyz("custompp-iso.xyz")
