@@ -32,7 +32,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     widthx = max(rcoords[:,0]) - min(rcoords[:,0])
     print("widthx", widthx)
     print("widthy",widthy)
-    spacing = widthy
+    spacing = widthy/2
     print("widthy*4",widthy*4)
 
     #rcoords[:,0] = [0, 0, 0.5, 0.5, 0, 0, 0.5, 0.5]
@@ -41,7 +41,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #rcoords = np.array([[0,0,0]])
     symmetries = np.array([[1,1,1], [-1,-1,-1], [1,-1+0.5, 1+0.5], [-1, 1+0.5, -1+0.5]])
     symmetriesM = np.array([[1,1,1], [-1,-1,-1], [1, 1, 1], [-1, -1,-1]])
-    symmetriesA = np.array([[1,spacing,0], [1,2 - spacing,1], [0, 1+widthy , 0], [0, 1-widthy , 1]])
+    symmetriesA = np.array([[1,spacing,0], [1,2 - spacing,1], [0, 1+spacing , 0], [0, 1-spacing , 1]])
     #symmetriesNewM = np.array([[1,1,1],[-1,-1,-1],[1,-1,1],[-1,1,-1]])
     #symmetriesNewA = np.array([[]])
     unitcell = np.zeros((len(symmetries)*len(rcoords),3))
@@ -161,7 +161,7 @@ def readxyz(filename):
 
 def main():
     #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPCtype.data")
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 2, 2, 10)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 10, 10, 1)
     
     msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = readxyz("custompp-iso.xyz")
