@@ -66,33 +66,72 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     print("unitcell", unitcell) 
     #calculate distances between ends:
     #pairs in unit cells
-    ends1s = [unitcell[8], unitcell[17], unitcell[26], unitcell[35]]
-    ends2s = [unitcell[10], unitcell[19], unitcell[28], [unitcell[1,0], unitcell[1,1]+2, unitcell[1,2]]]
+    ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
+    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.05*b, unitcell[10][2]*c], [unitcell[19][0]*a, unitcell[19][1]*b, unitcell[19][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+0.05*b, unitcell[28][2]*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b, unitcell[1,2]*c]]
     midpoints = []
     for i in range(len(ends1s)):
-        print("end1", ends1s[i], "end2", ends2s[i])
+        #print("end1", ends1s[i], "end2", ends2s[i])
         xdist = (ends1s[i][0] - ends2s[i][0])*a
         ydist = (ends1s[i][1] - ends2s[i][1])*b
         zdist = (ends1s[i][2] - ends2s[i][2])*c
+        print("end1", ends1s[i][0]*a, ends1s[i][1]*b, ends1s[i][2]*c)
+        print("end2", ends2s[i][0]*a, ends2s[i][1]*b, ends2s[i][2]*c)
         print("xdist", xdist, "ydist", ydist, "zdist", zdist)
         dist = (xdist**2 + ydist**2 + zdist**2)**0.5
         print("connection", i+1, "dist", dist)
-        print("end1", ends1s[i][0]*a, ends1s[i][1]*b, ends1s[i][2]*c)
-        print("end2", ends2s[i][0]*a, ends1s[i][1]*b, ends1s[i][2]*c)
+    for i in range(len(ends1s)):
+        print("end1", ends1s[i][0], ends1s[i][1], ends1s[i][2])
+        print("end2", ends2s[i][0], ends2s[i][1], ends2s[i][2])
         if i%2 == 0:
-            print("midpoint", (ends1s[i][0]*a + ends2s[i][0]*a)/2, (ends1s[i][1]*b + ends2s[i][1]*b)/2 , (ends1s[i][2]*c + ends2s[i][2]*c)/2)
-            midpoints.append([(ends1s[i][0]*a + ends2s[i][0]*a)/2, (ends1s[i][1]*b + ends2s[i][1]*b)/2 , (ends1s[i][2]*c + ends2s[i][2]*c)/2 + c])
+            print("midpoint", (ends1s[i][0]+ ends2s[i][0])/2, (ends1s[i][1] + ends2s[i][1])/2 , (ends1s[i][2] + ends2s[i][2])/2)
+            midpoints.append([(ends1s[i][0] + ends2s[i][0])/2, (ends1s[i][1] + ends2s[i][1])/2 , (ends1s[i][2] + ends2s[i][2])/2 + c])
+            print("midpoints", midpoints)
         else:
-            print("midpoint", (ends1s[i][0]*a + ends2s[i][0]*a)/2, (ends1s[i][1]*b + ends2s[i][1]*b)/2 , (ends1s[i][2]*c + ends2s[i][2]*c)/2)
-            midpoints.append([(ends1s[i][0]*a + ends2s[i][0]*a)/2, (ends1s[i][1]*b + ends2s[i][1]*b)/2 , (ends1s[i][2]*c + ends2s[i][2]*c)/2 - c])
+            print("midpoint", (ends1s[i][0] + ends2s[i][0])/2, (ends1s[i][1] + ends2s[i][1])/2 , (ends1s[i][2] + ends2s[i][2])/2)
+            midpoints.append([(ends1s[i][0] + ends2s[i][0])/2, (ends1s[i][1] + ends2s[i][1])/2 , (ends1s[i][2] + ends2s[i][2])/2 - c])
+            print("midpoints", midpoints)
+
+    print("unitcell", unitcell)
+    #connection 1 
+    #parabola in z y
+    # linear in x
+    Aparabola = []
+    Hparabola = []
+    Kparabola = []
+    Aline = []
+    Bline = []
+    print('ends1s', ends1s, 'ends1s', ends2s, 'midpoints', midpoints)
+    for i in range(len(ends1s)):
+        print(ends1s[i][1], midpoints[i][1], ends2s[i][1], ends1s[i][2], midpoints[i][2], ends2s[i][2])
+        ph  = midpoints[i][1]
+        pk  = midpoints[i][2]
+        pa = (ends1s[i][2] - pk)/((ends1s[i][1] - ph)**2)
+        Aparabola.append(pa)
+        Hparabola.append(ph)
+        Kparabola.append(pk)
+        [la,lb] = np.polyfit([ends1s[i][0], ends2s[i][0]],[ends1s[i][2], ends2s[i][2]],1)
+        Aline.append(la)
+        Bline.append(lb) 
+
+    connections1 = []
+    connections2 = []
+    connections3 = []
+    connections4 = []
+    npoints = [8,6,8,6]
+    for i in range(4):
+        xs = np.linspace(ends1s[i][0], ends2s[i][0], npoints[i])
+        ys = np.linspace(ends1s[i][1], ends2s[i][1], npoints[i])
+        zs = Aparabola[i]*(ys - Hparabola[i])**2 + Kparabola[i]
+        for j in range(1,npoints[i]):
+            vars()["connections"+str(i+1)].append([xs[j], ys[j], zs[j]])
 
 
-    center= np.zeros(3)
-    center[0] = min(unitcell[:,0]) + (max(unitcell[:,0]) - min(unitcell[:,0]))/2
-    center[1] = min(unitcell[:,1]) + (max(unitcell[:,1]) - min(unitcell[:,1]))/2
-    print('min y', min(unitcell[:,1])*b, 'max y', max(unitcell[:,1])*b, 'center y', center[1]*b)
-    center[2] = min(unitcell[:,2]) + (max(unitcell[:,2]) - min(unitcell[:,2]))/2
-    print("center", center)
+    
+    print("unitcell", unitcell)
+    
+
+
+
     count = 1
     mol = 1
     for k in range(Rz):
@@ -122,9 +161,13 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                 #count = count + 1
                 #atomsinfo.append([count, mol, 3, basex+2*a, basey, basez])
                 #count = count + 1
-    for m in midpoints:
-        atomsinfo.append([count, 5, 2, m[0], m[1], m[2]])
-        count = count + 1
+    #for m in midpoints:
+        #atomsinfo.append([count, 5, 2, m[0], m[1], m[2]])
+        #count = count + 1
+    for j in range(4):
+        for i in range(len(vars()["connections"+str(j+1)])):
+            atomsinfo.append([count, 5+j, 2+j, vars()["connections" + str(j+1)][i][0], vars()["connections" + str(j+1)][i][1], vars()["connections" + str(j+1)][i][2]])
+            count = count + 1
                     
 
     atomsinfo = np.array(atomsinfo)
