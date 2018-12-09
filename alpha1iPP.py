@@ -43,6 +43,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     xnegmin = min(-rcoords[:,0])
     xposmin = min(rcoords[:,0])
     diffxmin = xposmin - xnegmin
+    print("xnegmin", xnegmin, "xposmin", xposmin, "diffxmin", diffxmin)
     symmetries = np.array([[1,1,1], [-1,-1,-1], [1,-1+0.5, 1+0.5], [-1, 1+0.5, -1+0.5]])
     symmetriesM = np.array([[1,1,1], [-1, -1, -1], [1, 1, 1], [-1, -1, -1]])
     symmetriesA = np.array([[1,spacing,0], [diffxmin, 1-spacing, 1], [0, 1+spacing, 0], [1+diffxmin, 2- spacing, 1]])
@@ -66,7 +67,8 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #calculate distances between ends:
     #pairs in unit cells
     ends1s = [unitcell[8], unitcell[17], unitcell[26], unitcell[35]]
-    ends2s = [unitcell[9], unitcell[18], unitcell[27], [unitcell[0,0], unitcell[0,1]+2, unitcell[0,2]]]
+    ends2s = [unitcell[10], unitcell[19], unitcell[28], [unitcell[1,0], unitcell[1,1]+2, unitcell[1,2]]]
+    midpoints = []
     for i in range(len(ends1s)):
         print("end1", ends1s[i], "end2", ends2s[i])
         xdist = (ends1s[i][0] - ends2s[i][0])*a
@@ -75,7 +77,14 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         print("xdist", xdist, "ydist", ydist, "zdist", zdist)
         dist = (xdist**2 + ydist**2 + zdist**2)**0.5
         print("connection", i+1, "dist", dist)
-
+        print("end1", ends1s[i][0]*a, ends1s[i][1]*b, ends1s[i][2]*c)
+        print("end2", ends2s[i][0]*a, ends1s[i][1]*b, ends1s[i][2]*c)
+        if i%2 == 0:
+            print("midpoint", (ends1s[i][0]*a + ends2s[i][0]*a)/2, (ends1s[i][1]*b + ends2s[i][1]*b)/2 , (ends1s[i][2]*c + ends2s[i][2]*c)/2)
+            midpoints.append([(ends1s[i][0]*a + ends2s[i][0]*a)/2, (ends1s[i][1]*b + ends2s[i][1]*b)/2 , (ends1s[i][2]*c + ends2s[i][2]*c)/2 + c])
+        else:
+            print("midpoint", (ends1s[i][0]*a + ends2s[i][0]*a)/2, (ends1s[i][1]*b + ends2s[i][1]*b)/2 , (ends1s[i][2]*c + ends2s[i][2]*c)/2)
+            midpoints.append([(ends1s[i][0]*a + ends2s[i][0]*a)/2, (ends1s[i][1]*b + ends2s[i][1]*b)/2 , (ends1s[i][2]*c + ends2s[i][2]*c)/2 - c])
 
 
     center= np.zeros(3)
@@ -113,6 +122,9 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                 #count = count + 1
                 #atomsinfo.append([count, mol, 3, basex+2*a, basey, basez])
                 #count = count + 1
+    for m in midpoints:
+        atomsinfo.append([count, 5, 2, m[0], m[1], m[2]])
+        count = count + 1
                     
 
     atomsinfo = np.array(atomsinfo)
