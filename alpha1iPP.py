@@ -17,7 +17,8 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     b = 20.78
     c = 6.50
     atype = [1, 1, 1, 1, 1, 1, 1, 1, 1]
-    beta = 99.5 
+    beta = 99.5
+    #diffangle = 0
     diffangle = 99.5 - 90
     #find unit vector of new c axis
     zoffset = np.cos(math.radians(diffangle))
@@ -50,9 +51,10 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         print("symmetries", symmetries[s])
         for ci in range(len(rcoords)):
             #unitcell[ucount,0] = rcoords[ci,0]*np.sign(symmetries[s,0]) + np.sign(symmetries[s,0])*abs(abs(symmetries[s,0])-1) 
-            unitcell[ucount, 0] = rcoords[ci,0]*symmetriesM[s,0] + symmetriesA[s,0]
+            #unitcell[ucount, 0] = rcoords[ci,0]*symmetriesM[s,0] + symmetriesA[s,0]
             unitcell[ucount, 1] = rcoords[ci,1]*symmetriesM[s,1] + symmetriesA[s,1]
-            unitcell[ucount, 2] = rcoords[ci,2]*symmetriesM[s,2] + symmetriesA[s,2]
+            unitcell[ucount, 2] = (rcoords[ci,2]*symmetriesM[s,2] + symmetriesA[s,2])
+            unitcell[ucount, 0] = rcoords[ci,0]*symmetriesM[s,0] + symmetriesA[s,0] 
             #unitcell[ucount,1] = rcoords[ci,1]*np.sign(symmetries[s,1]) + np.sign(symmetries[s,1])*abs(abs(symmetries[s,1])-1)
             #unitcell[ucount,2] = rcoords[ci,2]*np.sign(symmetries[s,2]) + np.sign(symmetries[s,2])*abs(abs(symmetries[s,2])-1)
             print("unitcell[ucount]", unitcell[ucount])
@@ -67,22 +69,22 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     count = 1
     mol = 1
     for k in range(Rz):
-        #basez =k*c*zoffset
-        basez = k*c
+        basez =k*c*zoffset
+        #basez = k*c
         for j in range(Ry):
             basey = j*b*2
             for i in range(Rx):
-                #basex = i*a + xoffset*k*c*a 
-                basex  = i*a*2
+                basex = i*a*2 + xoffset*k*c*a 
+                #basex  = i*a*2
                 for ci in range(len(unitcell)):
                         mol = ci//9 + 1
                         #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)*a
-                        x = basex + unitcell[ci,0]*a
+                        x = basex + unitcell[ci,0]*a + unitcell[ci,2]*xoffset*c 
                         #print("x", x,"basex", basex, "symmetries[s][0]*a", symmetries[s][0]*a, "symmetries[s][0]", symmetries[s][0])
                         y = basey + unitcell[ci,1]*b
                         #print("y", y, "basey", basey, "symmetries[s][1]*b", symmetries[s][1]*b, "symmetries[s][1]", symmetries[s][1])
                         #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
-                        z = basez + unitcell[ci,2]*c
+                        z = basez + unitcell[ci,2]*c*zoffset
                         atomsinfo.append([count, mol, 1, x, y, z])
                         count = count + 1
                 #atomsinfo.append([count, mol, 2, basex+ center[0]*a, basey + center[1]*b, basez + center[2]*c])
@@ -103,12 +105,12 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #xhi =  (Rx+1)*a
     #yhi = (Ry+1)*b*(1.5)
     #zhi = (Rz+1)*c*(1.5)
-    xlo = min(atomsinfo[:,3]) - 0.1*a
-    xhi = max(atomsinfo[:,3]) + 0.1*a
-    ylo = min(atomsinfo[:,4]) - 0.1*b
-    yhi = max(atomsinfo[:,4]) + 0.1*b
-    zlo = min(atomsinfo[:,5]) - 0.1*c
-    zhi = max(atomsinfo[:,5]) + 0.1*c
+    xlo = -2*a + Rx*c*zoffset
+    xhi = Rx*a 
+    ylo = -2*b
+    yhi = Rx*b
+    zlo = -2*c*zoffset
+    zhi = Rz*c*zoffset
     return atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi
 
 def readlammpsbondsPPctypes(filename,newfile):
@@ -161,7 +163,7 @@ def readxyz(filename):
 
 def main():
     #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPCtype.data")
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 10, 10, 1)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 10, 10, 10)
     
     msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = readxyz("custompp-iso.xyz")
