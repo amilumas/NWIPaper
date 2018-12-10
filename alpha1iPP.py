@@ -3,7 +3,7 @@ import makesemicrystallineLmpsfEMC as msc
 import math
 
 def linearconnections(la,lb,la1, lb1, la2, lb2,start,end,mid,spacing):
-    npoints = 50
+    npoints = 1000
     xpos1 = np.linspace(start[0], mid[0], npoints)
     xpos2 = np.linspace(mid[0], end[0], npoints)
     ypos1 = la*xpos1 + lb*np.ones(npoints)
@@ -17,7 +17,7 @@ def linearconnections(la,lb,la1, lb1, la2, lb2,start,end,mid,spacing):
     conz = []
     dists1[0] = 0
     
-    nspacing = spacing
+    nspacing = spacing*0.8
     for i in range(npoints-1):
         dists1[i+1] = dists1[i] + ((xpos1[i] - xpos1[i+1])**2 + (ypos1[i] - ypos1[i+1])**2 + (zpos1[i] - zpos1[i+1])**2)**0.5
         if dists1[i] > nspacing:
@@ -29,7 +29,7 @@ def linearconnections(la,lb,la1, lb1, la2, lb2,start,end,mid,spacing):
     for i in range(npoints-1):
         dists2[i+1] = dists2[i] + ((xpos2[i] - xpos2[i+1])**2 + (ypos2[i] - ypos2[i+1])**2 + (zpos2[i] - zpos2[i+1])**2)**0.5
         print("ypos2[i+1]", ypos2[i+1], "end[1]-2", end[1]-2)
-        if dists2[i] > nspacing and ypos2[i+1] < end[1]:
+        if dists2[i] > nspacing and ypos2[i+1] <= end[1] - spacing/5:
             conx.append(xpos2[i+1])
             cony.append(ypos2[i+1])
             conz.append(zpos2[i+1])
@@ -103,7 +103,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #calculate distances between ends:
     #pairs in unit cells
     ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
-    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.05*b, unitcell[10][2]*c+0.1*c], [unitcell[19][0]*a, unitcell[19][1]*b+0.05*b, unitcell[19][2]*c-0.1*c], [unitcell[28][0]*a, unitcell[28][1]*b+0.05*b, unitcell[28][2]*c+0.1*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b+0.05*b, unitcell[1,2]*c-0.1*c]]
+    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.05*b, unitcell[10][2]*c+0.1*c], [unitcell[19][0]*a, unitcell[19][1]*b+0.05*b, unitcell[19][2]*c+0.2*c], [unitcell[28][0]*a, unitcell[28][1]*b+0.05*b, unitcell[28][2]*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b+0.05*b, unitcell[1,2]*c+0.2*c]]
     midpoints = []
     for i in range(len(ends1s)):
         #print("end1", ends1s[i], "end2", ends2s[i])
@@ -177,7 +177,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     sidegroups3 = []
     sidegroups4 = []
     npoints = [8,6,8,6]
-    spacing = [1.9,1.9,1.9,1.9]
+    spacing = [1.7,1.9,1.7,1.9]
     for i in range(4):
         xs1 = np.linspace(ends1s[i][0], midpoints[i][0], npoints[i])
         ys1 = Aline[i]*xs1 + Bline[i]
@@ -236,7 +236,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         #count = count + 1
     for j in range(4):
         for i in range(len(vars()["connections"+str(j+1)])):
-            atomsinfo.append([count, 5+j, 1, vars()["connections" + str(j+1)][i][0], vars()["connections" + str(j+1)][i][1], vars()["connections" + str(j+1)][i][2]])
+            atomsinfo.append([count, 5+j, 2+j, vars()["connections" + str(j+1)][i][0], vars()["connections" + str(j+1)][i][1], vars()["connections" + str(j+1)][i][2]])
             count = count + 1
                     
 
