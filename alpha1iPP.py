@@ -2,14 +2,14 @@ import numpy as np
 import makesemicrystallineLmpsfEMC as msc
 import math
 
-def linearconnections(la,lb,la1, lb1, la2, lb2,start,end,mid,spacing):
+def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,spacing):
     npoints = 1000
     xpos1 = np.linspace(start[0], mid[0], npoints)
     xpos2 = np.linspace(mid[0], end[0], npoints)
     ypos1 = la*xpos1 + lb*np.ones(npoints)
     ypos2 = la*xpos2 + lb*np.ones(npoints)
-    zpos1 = la1*ypos1 + lb1 
-    zpos2 = la2*ypos2 + lb2
+    zpos1 = pa1*(ypos1 - ph1)**2 + pk1
+    zpos2 = pa2*(ypos2 - ph2)**2 + pk2
     dists1 = np.zeros(npoints)
     dists2 = np.zeros(npoints)
     conx = []
@@ -29,7 +29,8 @@ def linearconnections(la,lb,la1, lb1, la2, lb2,start,end,mid,spacing):
     for i in range(npoints-1):
         dists2[i+1] = dists2[i] + ((xpos2[i] - xpos2[i+1])**2 + (ypos2[i] - ypos2[i+1])**2 + (zpos2[i] - zpos2[i+1])**2)**0.5
         print("ypos2[i+1]", ypos2[i+1], "end[1]-2", end[1]-2)
-        if dists2[i] > nspacing and ypos2[i+1] <= end[1] - spacing/5:
+        distend = ((xpos2[i+1] - end[0])**2 + (ypos2[i+1] - end[1])**2 + (zpos2[i+1] - end[2])**2)**2
+        if dists2[i] > nspacing and distend > spacing:
             conx.append(xpos2[i+1])
             cony.append(ypos2[i+1])
             conz.append(zpos2[i+1])
@@ -103,7 +104,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #calculate distances between ends:
     #pairs in unit cells
     ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
-    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.05*b, unitcell[10][2]*c+0.1*c], [unitcell[19][0]*a, unitcell[19][1]*b+0.05*b, unitcell[19][2]*c+0.2*c], [unitcell[28][0]*a, unitcell[28][1]*b+0.05*b, unitcell[28][2]*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b+0.05*b, unitcell[1,2]*c+0.2*c]]
+    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b, unitcell[10][2]*c], [unitcell[19][0], unitcell[19][1]*b, unitcell[19][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b, unitcell[28][2]*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b, unitcell[1,2]*c]]
     midpoints = []
     for i in range(len(ends1s)):
         #print("end1", ends1s[i], "end2", ends2s[i])
@@ -131,26 +132,30 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #connection 1 
     #parabola in z y
     # linear in x
-    Aparabola = []
-    Hparabola = []
-    Kparabola = []
+    Aparabola1 = []
+    Hparabola1 = []
+    Kparabola1 = []
+    Aparabola2 = []
+    Hparabola2 = []
+    Kparabola2 = []
     Aline = []
     Bline = []
 
-    YZline1A = []
-    YZline1B = []
-
-    YZline2A = []
-    YZline2B = []
     print('ends1s', ends1s, 'ends1s', ends2s, 'midpoints', midpoints)
     for i in range(len(ends1s)):
         print(ends1s[i][1], midpoints[i][1], ends2s[i][1], ends1s[i][2], midpoints[i][2], ends2s[i][2])
-        ph  = midpoints[i][1]
-        pk  = midpoints[i][2]
-        pa = (ends1s[i][2] - pk)/((ends1s[i][1] - ph)**2)
-        Aparabola.append(pa)
-        Hparabola.append(ph)
-        Kparabola.append(pk)
+        ph1  = midpoints[i][1]
+        pk1  = midpoints[i][2]
+        pa1 = (ends1s[i][2] - pk1)/((ends1s[i][1] - ph1)**2)
+        Aparabola1.append(pa1)
+        Hparabola1.append(ph1)
+        Kparabola1.append(pk1)
+        ph2 = midpoints[i][1]
+        pk2 = midpoints[i][2]
+        pa2 = (ends2s[i][2] - pk2)/((ends2s[i][1] - ph2)**2)
+        Aparabola2.append(pa2)
+        Hparabola2.append(ph2)
+        Kparabola2.append(pk2)
         la = (ends2s[i][1] - ends1s[i][1])/(ends2s[i][0] - ends1s[i][0])
         print("slope", la)
         lb = ends2s[i][1] - la*ends2s[i][0]
@@ -158,14 +163,6 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         Aline.append(la)
         Bline.append(lb) 
         
-        yzla1 = (ends1s[i][2] - midpoints[i][2])/(ends1s[i][1] - midpoints[i][1])
-        yzla2 = (ends2s[i][2] - midpoints[i][2])/(ends2s[i][1] - midpoints[i][1])
-        yzlb1 = ends1s[i][2] -yzla1*ends1s[i][1]
-        yzlb2 = ends2s[i][2] - yzla2*ends2s[i][1]
-        YZline1A.append(yzla1)
-        YZline1B.append(yzlb1)
-        YZline2A.append(yzla2)
-        YZline2B.append(yzlb2)
 
 
     connections1 = []
@@ -177,21 +174,24 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     sidegroups3 = []
     sidegroups4 = []
     npoints = [8,6,8,6]
-    spacing = [1.7,1.9,1.7,1.9]
+    spacing = [1.6,1.7,1.6,1.7]
     for i in range(4):
-        xs1 = np.linspace(ends1s[i][0], midpoints[i][0], npoints[i])
-        ys1 = Aline[i]*xs1 + Bline[i]
-        zs1 = YZline1A[i]*ys1 + YZline1B[i]
-        xs2 = np.linspace(midpoints[i][0], ends2s[i][0], npoints[i])
-        ys2 = Aline[i]*xs2 + Bline[i]
-        zs2 = YZline2A[i]*ys2 + YZline2B[i]
-        conx, cony, conz = linearconnections(Aline[i],Bline[i],YZline1A[i], YZline1B[i], YZline2A[i], YZline2B[i], ends1s[i], ends2s[i],midpoints[i],spacing[i])
+        #xs1 = np.linspace(ends1s[i][0], midpoints[i][0], npoints[i])
+        #ys1 = Aline[i]*xs1 + Bline[i]
+        #zs1 = Aparabola1[i]*(ys1 - Hparabola1[i])**2 + Kparabola1[i]
+        #xs2 = np.linspace(midpoints[i][0], ends2s[i][0], npoints[i])
+        #ys2 = Aline[i]*xs2 + Bline[i]
+        #zs2 = Aparabola2[i]*(ys2 - Hparabola2[i])**2 + Kparabola2[i]
+        conx, cony, conz = linear2parabolaConnect(Aline[i],Bline[i],Aparabola1[i], Hparabola1[i], Kparabola1[i], Aparabola2[i], Hparabola2[i], Kparabola2[i], ends1s[i], ends2s[i],midpoints[i],spacing[i])
         #print("old xs", xs, "old ys", ys, "old zs", zs)
         #xs,ys,zs = paraboliclinear(Aline[i],Bline[i],Aparabola[i],Hparabola[i],Kparabola[i],ends1s[i],ends2s[i],spacing[i]) 
         
         #print("xs", xs, "ys", ys, "zs", zs)
         for j in range(len(conx)):
             vars()["connections"+str(i+1)].append([conx[j], cony[j], conz[j]])
+            #vars()["connections" + str(i+1)].append([xs1[j], ys1[j], zs1[j]])
+        #for j in range(len(xs2)):
+            #vars()["connections" + str(i+1)].append([xs2[j], ys2[j], zs2[j]])
         #add side groups
 
 
