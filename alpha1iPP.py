@@ -2,6 +2,31 @@ import numpy as np
 import makesemicrystallineLmpsfEMC as msc
 import math
 
+def paraboliclinear(la,lb,pa,ph,pk,start,end,spacing,buf=0):
+    npoints = 50
+    xpos = np.linspace(start[0]+buf, end[0], npoints)
+    ypos = xpos*la + lb*np.ones(npoints) 
+    zpos = pa*(xpos - np.ones(npoints)*ph)**2 + pk*np.ones(npoints)
+    print("xpos", xpos)
+    print("ypos", ypos)
+    print("zpos", zpos)
+    dists = np.zeros(npoints)
+    conx = []
+    cony = []
+    conz = []
+    dists[0] = 0
+    for i in range(npoints-1):
+        dists[i+1] = dists[i] + ((xpos[i] - xpos[i+1])**2 + (ypos[i] - ypos[i+1])**2 + (zpos[i] - zpos[i+1])**2)**0.5
+        if dists[i] > spacing:
+            conx.append(xpos[i+1])
+            cony.append(ypos[i+1])
+            conz.append(zpos[i+1])
+            print("spacing", spacing, "xpos[i+1]", xpos[i+1], "ypos[i+1]", ypos[i+1], "zpos[i+1]", zpos[i+1])
+            spacing = spacing + spacing
+            
+    return conx, cony, conz
+    
+
 
 def writexyz(xyzfile, atomsinfo):
     Natoms = len(atomsinfo)
@@ -67,7 +92,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #calculate distances between ends:
     #pairs in unit cells
     ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
-    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.05*b, unitcell[10][2]*c], [unitcell[19][0]*a, unitcell[19][1]*b, unitcell[19][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+0.05*b, unitcell[28][2]*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b, unitcell[1,2]*c]]
+    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.05*b, unitcell[10][2]*c], [unitcell[19][0]*a, unitcell[19][1]*b+0.05*b, unitcell[19][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+0.05*b, unitcell[28][2]*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b+0.05*b, unitcell[1,2]*c]]
     midpoints = []
     for i in range(len(ends1s)):
         #print("end1", ends1s[i], "end2", ends2s[i])
@@ -109,7 +134,10 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         Aparabola.append(pa)
         Hparabola.append(ph)
         Kparabola.append(pk)
-        [la,lb] = np.polyfit([ends1s[i][0], ends2s[i][0]],[ends1s[i][2], ends2s[i][2]],1)
+        la = (ends2s[i][1] - ends1s[i][1])/(ends2s[i][0] - ends1s[i][0])
+        print("slope", la)
+        lb = ends2s[i][1] - la*ends2s[i][0]
+        #[la,lb] = np.polyfit([ends1s[i][1], ends2s[i][1]],[ends1s[i][0], ends2s[i][0]],1)
         Aline.append(la)
         Bline.append(lb) 
 
@@ -117,13 +145,22 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     connections2 = []
     connections3 = []
     connections4 = []
-    npoints = [8,6,8,6]
+    sidegroups1 = []
+    sidegroups2 = []
+    sidegroups3 = []
+    sidegroups4 = []
+    npoints = [108,106,108,106]
     for i in range(4):
         xs = np.linspace(ends1s[i][0], ends2s[i][0], npoints[i])
-        ys = np.linspace(ends1s[i][1], ends2s[i][1], npoints[i])
-        zs = Aparabola[i]*(ys - Hparabola[i])**2 + Kparabola[i]
-        for j in range(1,npoints[i]):
+        ys = Aline[i]*xs + Bline[i]*np.ones(npoints[i])
+        zs = Aparabola[i]*(ys - Hparabola[i])**2 + Kparabola[i]*np.ones(npoints[i])
+        print("old xs", xs, "old ys", ys, "old zs", zs)
+        xs,ys,zs = paraboliclinear(Aline[i],Bline[i],Aparabola[i],Hparabola[i],Kparabola[i],ends1s[i],ends2s[i],1.54) 
+        print("xs", xs, "ys", ys, "zs", zs)
+        for j in range(len(xs)):
             vars()["connections"+str(i+1)].append([xs[j], ys[j], zs[j]])
+        #add side groups
+
 
 
     
