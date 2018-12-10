@@ -15,8 +15,12 @@ def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,sp
     conx = []
     cony = []
     conz = []
+    sidex = []
+    sidey = []
+    sidez = []
     dists1[0] = 0
-    
+    pad = 0
+    extra = 0
     nspacing = spacing*0.8
     for i in range(npoints-1):
         dists1[i+1] = dists1[i] + ((xpos1[i] - xpos1[i+1])**2 + (ypos1[i] - ypos1[i+1])**2 + (zpos1[i] - zpos1[i+1])**2)**0.5
@@ -26,9 +30,33 @@ def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,sp
             conz.append(zpos1[i+1])
             nspacing = nspacing + spacing
     dists2[0] = dists1[-1]
+    N1 = len(conx)
+    #put side groups for first parabola
+    for i in range(N1):
+        if i%2 == 0:
+            xyvec = np.array([1,la])
+            distxyvec = sum(xyvec**2)**0.5
+            normxyvec  = xyvec/distxyvec
+
+            sx = conx[i] - (pad)*normxyvec[0]
+            sy = cony[i] - pad*normxyvec[1]
+
+            slope = -1*(pa1*2*(cony[i] - ph1))
+            inter = conz[i] - slope*cony[i]
+            vec = np.array([slope, 1])
+            distvec = sum(vec**2)**0.5
+            normvec = vec/distvec
+            print("i", i,"normvec", normvec)
+            
+
+            sy = sy - np.sign(normvec[0])*(spacing-pad + extra)*(normvec[0])
+            sz = conz[i] - np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
+            sidex.append(sx)
+            sidey.append(sy)
+            sidez.append(sz)
+
     for i in range(npoints-1):
         dists2[i+1] = dists2[i] + ((xpos2[i] - xpos2[i+1])**2 + (ypos2[i] - ypos2[i+1])**2 + (zpos2[i] - zpos2[i+1])**2)**0.5
-        print("ypos2[i+1]", ypos2[i+1], "end[1]-2", end[1]-2)
         distend = ((xpos2[i+1] - end[0])**2 + (ypos2[i+1] - end[1])**2 + (zpos2[i+1] - end[2])**2)**2
         if dists2[i] > nspacing and distend > spacing:
             conx.append(xpos2[i+1])
@@ -36,7 +64,7 @@ def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,sp
             conz.append(zpos2[i+1])
             nspacing = nspacing + spacing
             
-    return conx, cony, conz
+    return conx, cony, conz, sidex, sidey, sidez
     
 
 
@@ -100,7 +128,6 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
             #unitcell[ucount,2] = rcoords[ci,2]*np.sign(symmetries[s,2]) + np.sign(symmetries[s,2])*abs(abs(symmetries[s,2])-1)
             print("unitcell[ucount]", unitcell[ucount])
             ucount +=1
-    print("unitcell", unitcell) 
     #calculate distances between ends:
     #pairs in unit cells
     ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
@@ -111,8 +138,6 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         xdist = (ends1s[i][0] - ends2s[i][0])*a
         ydist = (ends1s[i][1] - ends2s[i][1])*b
         zdist = (ends1s[i][2] - ends2s[i][2])*c
-        print("end1", ends1s[i][0]*a, ends1s[i][1]*b, ends1s[i][2]*c)
-        print("end2", ends2s[i][0]*a, ends2s[i][1]*b, ends2s[i][2]*c)
         print("xdist", xdist, "ydist", ydist, "zdist", zdist)
         dist = (xdist**2 + ydist**2 + zdist**2)**0.5
         print("connection", i+1, "dist", dist)
@@ -128,7 +153,6 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
             midpoints.append([(ends1s[i][0] + ends2s[i][0])/2, (ends1s[i][1] + ends2s[i][1])/2 , (ends1s[i][2] + ends2s[i][2])/2 - c])
             print("midpoints", midpoints)
 
-    print("unitcell", unitcell)
     #connection 1 
     #parabola in z y
     # linear in x
@@ -182,13 +206,15 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         #xs2 = np.linspace(midpoints[i][0], ends2s[i][0], npoints[i])
         #ys2 = Aline[i]*xs2 + Bline[i]
         #zs2 = Aparabola2[i]*(ys2 - Hparabola2[i])**2 + Kparabola2[i]
-        conx, cony, conz = linear2parabolaConnect(Aline[i],Bline[i],Aparabola1[i], Hparabola1[i], Kparabola1[i], Aparabola2[i], Hparabola2[i], Kparabola2[i], ends1s[i], ends2s[i],midpoints[i],spacing[i])
+        conx, cony, conz, sidex, sidey, sidez = linear2parabolaConnect(Aline[i],Bline[i],Aparabola1[i], Hparabola1[i], Kparabola1[i], Aparabola2[i], Hparabola2[i], Kparabola2[i], ends1s[i], ends2s[i],midpoints[i],spacing[i])
         #print("old xs", xs, "old ys", ys, "old zs", zs)
         #xs,ys,zs = paraboliclinear(Aline[i],Bline[i],Aparabola[i],Hparabola[i],Kparabola[i],ends1s[i],ends2s[i],spacing[i]) 
         
         #print("xs", xs, "ys", ys, "zs", zs)
         for j in range(len(conx)):
             vars()["connections"+str(i+1)].append([conx[j], cony[j], conz[j]])
+        for j in range(len(sidex)):
+            vars()["connections"+str(i+1)].append([sidex[j], sidey[j], sidez[j]])
             #vars()["connections" + str(i+1)].append([xs1[j], ys1[j], zs1[j]])
         #for j in range(len(xs2)):
             #vars()["connections" + str(i+1)].append([xs2[j], ys2[j], zs2[j]])
@@ -197,7 +223,6 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
 
 
     
-    print("unitcell", unitcell)
     
 
 
