@@ -2,28 +2,37 @@ import numpy as np
 import makesemicrystallineLmpsfEMC as msc
 import math
 
-def paraboliclinear(la,lb,pa,ph,pk,start,end,spacing):
+def linearconnections(la,lb,la1, lb1, la2, lb2,start,end,mid,spacing):
     npoints = 50
-    xpos = np.linspace(start[0], end[0], npoints)
-    ypos = la*xpos + lb*np.ones(npoints)
-    zpos = pa*(ypos - ph)**2 + pk*np.ones(npoints)
-    print("pa", pa, "ph", ph, "pk", pk)
-    print("xpos", xpos)
-    print("ypos", ypos)
-    print("zpos", zpos)
-    dists = np.zeros(npoints)
+    xpos1 = np.linspace(start[0], mid[0], npoints)
+    xpos2 = np.linspace(mid[0], end[0], npoints)
+    ypos1 = la*xpos1 + lb*np.ones(npoints)
+    ypos2 = la*xpos2 + lb*np.ones(npoints)
+    zpos1 = la1*ypos1 + lb1 
+    zpos2 = la2*ypos2 + lb2
+    dists1 = np.zeros(npoints)
+    dists2 = np.zeros(npoints)
     conx = []
     cony = []
     conz = []
-    dists[0] = 0
+    dists1[0] = 0
+    
     nspacing = spacing
     for i in range(npoints-1):
-        dists[i+1] = dists[i] + ((xpos[i] - xpos[i+1])**2 + (ypos[i] - ypos[i+1])**2 + (zpos[i] - zpos[i+1])**2)**0.5
-        if dists[i] > nspacing:
-            conx.append(xpos[i+1])
-            cony.append(ypos[i+1])
-            conz.append(zpos[i+1])
-            print("spacing", spacing, "xpos[i+1]", xpos[i+1], "ypos[i+1]", ypos[i+1], "zpos[i+1]", zpos[i+1])
+        dists1[i+1] = dists1[i] + ((xpos1[i] - xpos1[i+1])**2 + (ypos1[i] - ypos1[i+1])**2 + (zpos1[i] - zpos1[i+1])**2)**0.5
+        if dists1[i] > nspacing:
+            conx.append(xpos1[i+1])
+            cony.append(ypos1[i+1])
+            conz.append(zpos1[i+1])
+            nspacing = nspacing + spacing
+    dists2[0] = dists1[-1]
+    for i in range(npoints-1):
+        dists2[i+1] = dists2[i] + ((xpos2[i] - xpos2[i+1])**2 + (ypos2[i] - ypos2[i+1])**2 + (zpos2[i] - zpos2[i+1])**2)**0.5
+        print("ypos2[i+1]", ypos2[i+1], "end[1]-2", end[1]-2)
+        if dists2[i] > nspacing and ypos2[i+1] < end[1]:
+            conx.append(xpos2[i+1])
+            cony.append(ypos2[i+1])
+            conz.append(zpos2[i+1])
             nspacing = nspacing + spacing
             
     return conx, cony, conz
@@ -94,7 +103,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #calculate distances between ends:
     #pairs in unit cells
     ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
-    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.05*b, unitcell[10][2]*c], [unitcell[19][0]*a, unitcell[19][1]*b+0.05*b, unitcell[19][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+0.05*b, unitcell[28][2]*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b+0.05*b, unitcell[1,2]*c]]
+    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.05*b, unitcell[10][2]*c+0.1*c], [unitcell[19][0]*a, unitcell[19][1]*b+0.05*b, unitcell[19][2]*c-0.1*c], [unitcell[28][0]*a, unitcell[28][1]*b+0.05*b, unitcell[28][2]*c+0.1*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b+0.05*b, unitcell[1,2]*c-0.1*c]]
     midpoints = []
     for i in range(len(ends1s)):
         #print("end1", ends1s[i], "end2", ends2s[i])
@@ -127,6 +136,12 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     Kparabola = []
     Aline = []
     Bline = []
+
+    YZline1A = []
+    YZline1B = []
+
+    YZline2A = []
+    YZline2B = []
     print('ends1s', ends1s, 'ends1s', ends2s, 'midpoints', midpoints)
     for i in range(len(ends1s)):
         print(ends1s[i][1], midpoints[i][1], ends2s[i][1], ends1s[i][2], midpoints[i][2], ends2s[i][2])
@@ -142,6 +157,16 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         #[la,lb] = np.polyfit([ends1s[i][1], ends2s[i][1]],[ends1s[i][0], ends2s[i][0]],1)
         Aline.append(la)
         Bline.append(lb) 
+        
+        yzla1 = (ends1s[i][2] - midpoints[i][2])/(ends1s[i][1] - midpoints[i][1])
+        yzla2 = (ends2s[i][2] - midpoints[i][2])/(ends2s[i][1] - midpoints[i][1])
+        yzlb1 = ends1s[i][2] -yzla1*ends1s[i][1]
+        yzlb2 = ends2s[i][2] - yzla2*ends2s[i][1]
+        YZline1A.append(yzla1)
+        YZline1B.append(yzlb1)
+        YZline2A.append(yzla2)
+        YZline2B.append(yzlb2)
+
 
     connections1 = []
     connections2 = []
@@ -154,15 +179,19 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     npoints = [8,6,8,6]
     spacing = [1.9,1.9,1.9,1.9]
     for i in range(4):
-        #xs = np.linspace(ends1s[i][0], ends2s[i][0], npoints[i])
-        #ys = Aline[i]*xs + Bline[i]*np.ones(npoints[i])
-        #zs = Aparabola[i]*(ys - Hparabola[i])**2 + Kparabola[i]*np.ones(npoints[i])
+        xs1 = np.linspace(ends1s[i][0], midpoints[i][0], npoints[i])
+        ys1 = Aline[i]*xs1 + Bline[i]
+        zs1 = YZline1A[i]*ys1 + YZline1B[i]
+        xs2 = np.linspace(midpoints[i][0], ends2s[i][0], npoints[i])
+        ys2 = Aline[i]*xs2 + Bline[i]
+        zs2 = YZline2A[i]*ys2 + YZline2B[i]
+        conx, cony, conz = linearconnections(Aline[i],Bline[i],YZline1A[i], YZline1B[i], YZline2A[i], YZline2B[i], ends1s[i], ends2s[i],midpoints[i],spacing[i])
         #print("old xs", xs, "old ys", ys, "old zs", zs)
-        xs,ys,zs = paraboliclinear(Aline[i],Bline[i],Aparabola[i],Hparabola[i],Kparabola[i],ends1s[i],ends2s[i],spacing[i]) 
+        #xs,ys,zs = paraboliclinear(Aline[i],Bline[i],Aparabola[i],Hparabola[i],Kparabola[i],ends1s[i],ends2s[i],spacing[i]) 
         
         #print("xs", xs, "ys", ys, "zs", zs)
-        for j in range(len(xs)):
-            vars()["connections"+str(i+1)].append([xs[j], ys[j], zs[j]])
+        for j in range(len(conx)):
+            vars()["connections"+str(i+1)].append([conx[j], cony[j], conz[j]])
         #add side groups
 
 
@@ -207,7 +236,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         #count = count + 1
     for j in range(4):
         for i in range(len(vars()["connections"+str(j+1)])):
-            atomsinfo.append([count, 5+j, 2+j, vars()["connections" + str(j+1)][i][0], vars()["connections" + str(j+1)][i][1], vars()["connections" + str(j+1)][i][2]])
+            atomsinfo.append([count, 5+j, 1, vars()["connections" + str(j+1)][i][0], vars()["connections" + str(j+1)][i][1], vars()["connections" + str(j+1)][i][2]])
             count = count + 1
                     
 
