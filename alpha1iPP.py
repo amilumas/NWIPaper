@@ -166,8 +166,8 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     c = 6.50
     atype = [1, 1, 1, 1, 1, 1, 1, 1, 1]
     beta = 99.5
-    diffangle = 0
-    #diffangle = 99.5 - 90
+    #diffangle = 0
+    diffangle = 99.5 - 90
     #find unit vector of new c axis
     zoffset = np.cos(math.radians(diffangle))
     xoffset = -np.sin(math.radians(diffangle))
@@ -348,54 +348,87 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     mol = 1
     for s in range(4):
         for k in range(Rz):
-            basez =k*c*zoffset
+            basez =k*c
             #basez = k*c
             for j in range(Ry):
                 basey = j*b*2
                 for i in range(Rx):
-                    basex = i*a*2 + xoffset*k*c*a 
+                    basex = i*a*2 
                     #basex  = i*a*2
                     for ci in range(9):
                         mol = ci//9 + 1
                         #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)*a
-                        x = basex + unitcell[s*9 + ci,0]*a + unitcell[s*9 + ci,2]*xoffset*c 
+                        x = basex + unitcell[s*9 + ci,0]*a 
                         #print("x", x,"basex", basex, "symmetries[s][0]*a", symmetries[s][0]*a, "symmetries[s][0]", symmetries[s][0])
                         y = basey + unitcell[s*9 + ci,1]*b
                         #print("y", y, "basey", basey, "symmetries[s][1]*b", symmetries[s][1]*b, "symmetries[s][1]", symmetries[s][1])
                         #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
-                        z = basez + unitcell[s*9 + ci,2]*c*zoffset
-                        atomsinfo.append([count, mol, 1, x, y, z])
+                        z = basez + unitcell[s*9 + ci,2]*c
+                        tx = x + z*xoffset
+                        ty = y
+                        tz = z*zoffset
+                        atomsinfo.append([count, mol, 1, tx, ty, tz])
                         count = count + 1
                     if k == Rz -1 and s%2 == 0:
-                        for i in range(len(vars()["connections"+str(s+1)])):
-                            atomsinfo.append([count, 5+s, 1, basex + vars()["connections" + str(s+1)][i][0], basey + vars()["connections" + str(s+1)][i][1], basez + vars()["connections" + str(s+1)][i][2]])
+                        for ii in range(len(vars()["connections"+str(s+1)])):
+                            x = basex + vars()["connections" + str(s+1)][ii][0]
+                            y = basey + vars()["connections" + str(s+1)][ii][1]
+                            z = basez + vars()["connections" + str(s+1)][ii][2]
+                            tx = x + z*xoffset
+                            ty = y 
+                            tz = z*zoffset
+                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                             count = count + 1
                     if k == Rz -1 and s%2 ==1 and (s != 3 or j < Ry-1):
                         for ii in range(len(vars()["connections"+str(s+1)])):
-                            atomsinfo.append([count, 5+s, 1, basex + vars()["connections" + str(s+1)][ii][0], basey + vars()["connections" + str(s+1)][ii][1], 0 + vars()["connections" + str(s+1)][ii][2]])
+                            x = basex + vars()["connections" + str(s+1)][ii][0]
+                            y = basey + vars()["connections" + str(s+1)][ii][1]
+                            z = vars()["connections" + str(s+1)][ii][2]
+                            tx = x + z*xoffset
+                            ty = y
+                            tz = z*zoffset
+                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                             count = count + 1
                     if k == Rz -1 and s==3 and j == Ry-1 and i%2 ==0:
                         for ii in range(len(pconx)):
-                            atomsinfo.append([count, 5+s, 1, basex + pconx[ii], basey + pcony[ii], 0 + pconz[ii]])
+                            x = basex + pconx[ii]
+                            y = basey + pcony[ii]
+                            z = pconz[ii]
+                            tx = x + z*xoffset
+                            ty = y
+                            tz = z*zoffset
+
+                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                             count = count + 1
+
                         for ii in range(len(psidex)):
-                            atomsinfo.append([count, 5+s, 1, basex + psidex[ii], basey + psidey[ii], 0 + psidez[ii]])
+                            x = basex + psidex[ii]
+                            y = basey + psidey[ii]
+                            z = psidez[ii]
+                            tx = x + z*xoffset
+                            ty = y
+                            tz = z*zoffset
+                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                             count = count + 1
                     elif k == Rz -1 and s==3 and j == Ry -1 and i%2 ==1:
-                        #print("p2conx", p2conx + basex)
-                        #print("p2cony", p2cony)
-                        #print("p2conz", p2conz)
-                        #print("p2sidex", p2sidex + basex)
-                        #print("p2sidey", p2sidey)
-                        #print("p2sidez", p2sidez)
-                        #print("len(p2conx)", len(p2conx))
-                        #print("len(p2sidex)", len(p2sidex))
 
                         for ii in range(len(p2conx)):
-                            atomsinfo.append([count, 5+s, 1, basex + p2conx[ii], p2cony[ii], 0+ p2conz[ii]])
+                            x = basex  + p2conx[ii]
+                            y = p2cony[ii]
+                            z = p2conz[ii]
+                            tx = x + z*xoffset
+                            ty = y
+                            tz = z*zoffset
+                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                             count = count + 1
                         for ii in range(len(p2sidex)):
-                            atomsinfo.append([count, 5+s, 1, basex + p2sidex[ii], p2sidey[ii], 0 + p2sidez[ii]])
+                            x = basex + p2sidex[ii]
+                            y = basey + p2sidey[ii] 
+                            z = basez + p2sidez[ii]
+                            tx = x + z*xoffset
+                            ty = y
+                            tz = z*zoffset
+                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                             count = count + 1
                 #atomsinfo.append([count, mol, 2, basex+ center[0]*a, basey + center[1]*b, basez + center[2]*c])
                 #count = count + 1
