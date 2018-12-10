@@ -2,11 +2,12 @@ import numpy as np
 import makesemicrystallineLmpsfEMC as msc
 import math
 
-def paraboliclinear(la,lb,pa,ph,pk,start,end,spacing,buf=0):
+def paraboliclinear(la,lb,pa,ph,pk,start,end,spacing):
     npoints = 50
-    xpos = np.linspace(start[0]+buf, end[0], npoints)
-    ypos = xpos*la + lb*np.ones(npoints) 
-    zpos = pa*(xpos - np.ones(npoints)*ph)**2 + pk*np.ones(npoints)
+    xpos = np.linspace(start[0], end[0], npoints)
+    ypos = la*xpos + lb*np.ones(npoints)
+    zpos = pa*(ypos - ph)**2 + pk*np.ones(npoints)
+    print("pa", pa, "ph", ph, "pk", pk)
     print("xpos", xpos)
     print("ypos", ypos)
     print("zpos", zpos)
@@ -15,14 +16,15 @@ def paraboliclinear(la,lb,pa,ph,pk,start,end,spacing,buf=0):
     cony = []
     conz = []
     dists[0] = 0
+    nspacing = spacing
     for i in range(npoints-1):
         dists[i+1] = dists[i] + ((xpos[i] - xpos[i+1])**2 + (ypos[i] - ypos[i+1])**2 + (zpos[i] - zpos[i+1])**2)**0.5
-        if dists[i] > spacing:
+        if dists[i] > nspacing:
             conx.append(xpos[i+1])
             cony.append(ypos[i+1])
             conz.append(zpos[i+1])
             print("spacing", spacing, "xpos[i+1]", xpos[i+1], "ypos[i+1]", ypos[i+1], "zpos[i+1]", zpos[i+1])
-            spacing = spacing + spacing
+            nspacing = nspacing + spacing
             
     return conx, cony, conz
     
@@ -149,14 +151,16 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     sidegroups2 = []
     sidegroups3 = []
     sidegroups4 = []
-    npoints = [108,106,108,106]
+    npoints = [8,6,8,6]
+    spacing = [1.9,1.9,1.9,1.9]
     for i in range(4):
-        xs = np.linspace(ends1s[i][0], ends2s[i][0], npoints[i])
-        ys = Aline[i]*xs + Bline[i]*np.ones(npoints[i])
-        zs = Aparabola[i]*(ys - Hparabola[i])**2 + Kparabola[i]*np.ones(npoints[i])
-        print("old xs", xs, "old ys", ys, "old zs", zs)
-        xs,ys,zs = paraboliclinear(Aline[i],Bline[i],Aparabola[i],Hparabola[i],Kparabola[i],ends1s[i],ends2s[i],1.54) 
-        print("xs", xs, "ys", ys, "zs", zs)
+        #xs = np.linspace(ends1s[i][0], ends2s[i][0], npoints[i])
+        #ys = Aline[i]*xs + Bline[i]*np.ones(npoints[i])
+        #zs = Aparabola[i]*(ys - Hparabola[i])**2 + Kparabola[i]*np.ones(npoints[i])
+        #print("old xs", xs, "old ys", ys, "old zs", zs)
+        xs,ys,zs = paraboliclinear(Aline[i],Bline[i],Aparabola[i],Hparabola[i],Kparabola[i],ends1s[i],ends2s[i],spacing[i]) 
+        
+        #print("xs", xs, "ys", ys, "zs", zs)
         for j in range(len(xs)):
             vars()["connections"+str(i+1)].append([xs[j], ys[j], zs[j]])
         #add side groups
