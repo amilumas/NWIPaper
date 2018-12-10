@@ -174,7 +174,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     sidegroups3 = []
     sidegroups4 = []
     npoints = [8,6,8,6]
-    spacing = [1.6,1.7,1.6,1.7]
+    spacing = [1.54,1.54,1.54,1.54]
     for i in range(4):
         #xs1 = np.linspace(ends1s[i][0], midpoints[i][0], npoints[i])
         #ys1 = Aline[i]*xs1 + Bline[i]
@@ -236,7 +236,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         #count = count + 1
     for j in range(4):
         for i in range(len(vars()["connections"+str(j+1)])):
-            atomsinfo.append([count, 5+j, 2+j, vars()["connections" + str(j+1)][i][0], vars()["connections" + str(j+1)][i][1], vars()["connections" + str(j+1)][i][2]])
+            atomsinfo.append([count, 5+j, 1, vars()["connections" + str(j+1)][i][0], vars()["connections" + str(j+1)][i][1], vars()["connections" + str(j+1)][i][2]])
             count = count + 1
                     
 
