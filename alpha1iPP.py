@@ -34,12 +34,8 @@ def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,sp
     #put side groups for first parabola
     for i in range(N1):
         if i%2 == 0:
-            xyvec = np.array([1,la])
-            distxyvec = sum(xyvec**2)**0.5
-            normxyvec  = xyvec/distxyvec
 
-            sx = conx[i] - (pad)*normxyvec[0]
-            sy = cony[i] - pad*normxyvec[1]
+            sx = conx[i] 
 
             slope = -1*(pa1*2*(cony[i] - ph1))
             inter = conz[i] - slope*cony[i]
@@ -49,7 +45,7 @@ def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,sp
             print("i", i,"normvec", normvec)
             
 
-            sy = sy - np.sign(normvec[0])*(spacing-pad + extra)*(normvec[0])
+            sy = cony[i] - np.sign(normvec[0])*(spacing-pad + extra)*(normvec[0])
             sz = conz[i] - np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
             sidex.append(sx)
             sidey.append(sy)
@@ -63,6 +59,21 @@ def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,sp
             cony.append(ypos2[i+1])
             conz.append(zpos2[i+1])
             nspacing = nspacing + spacing
+    N = len(conx)
+    for i in range(N1, N):
+        if i%2 == 0:
+            sx = conx[i]
+            slope = -1*(pa2*2*(cony[i] - ph2))
+            inter = conz[i] - slope*cony[i]
+            vec = np.array([slope, 1])
+            distvec = sum(vec**2)**0.5
+            normvec = vec/distvec
+            sy = cony[i] +  np.sign(normvec[0])*(spacing-pad + extra)*normvec[0]
+            sz = conz[i] + np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
+            sidex.append(sx)
+            sidey.append(sy)
+            sidez.append(sz)
+
             
     return conx, cony, conz, sidex, sidey, sidez
     
