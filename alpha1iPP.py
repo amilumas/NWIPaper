@@ -2,6 +2,78 @@ import numpy as np
 import makesemicrystallineLmpsfEMC as msc
 import math
 
+
+def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, mid, spacing):
+    npoints = 1000
+    xpos1 = np.linspace(start[0], mid[0], npoints)
+    xpos2 = np.linspace(mid[0], end[0], npoints)
+    ypos1 = la*xpos1 + lb*np.ones(npoints)
+    ypos2 = la*xpos2 + lb*np.ones(npoints)
+    zpos1 = pa1*(xpos1 - ph1)**2 + pk1
+    zpos2 = pa2*(xpos2 - ph2)**2 + pk2
+    #print("xpos1", xpos1)
+    #print("zpos1", zpos1)
+    dists1 = np.zeros(npoints)
+    dists2 = np.zeros(npoints)
+    conx = []
+    cony = []
+    conz = []
+    sidex = []
+    sidey = []
+    sidez = []
+    dists1[0] = 0
+    pad = 1.5
+    extra = 0.1
+    nspacing = spacing*0.8
+    for i in range(npoints-1):
+        dists1[i+1] = dists1[i] + ((xpos1[i] - xpos1[i+1])**2 + (ypos1[i] - ypos1[i+1])**2 + (zpos1[i] - zpos1[i+1])**2)**0.5
+        if dists1[i] > nspacing:
+            conx.append(xpos1[i+1])
+            cony.append(ypos1[i+1])
+            conz.append(zpos1[i+1])
+            nspacing = nspacing + spacing
+    dists2[0] = dists1[-1]
+    N1 = len(conx)
+    for i in range(N1):
+        if i%2 == 0:
+            sy = cony[i] - pad
+            slope = -1*(pa1*2*(conx[i] - ph1))
+            inter = conz[i] - slope*conx[i]
+            vec = np.array([slope, 1])
+            distvec = sum(vec**2)**0.5
+            normvec = vec/distvec
+            print("i", i,"normvec", normvec)
+            sx = conx[i] + np.sign(normvec[0])*(spacing-pad + extra)*(normvec[0])
+            sz = conz[i] + np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
+            sidex.append(sx)
+            sidey.append(sy)
+            sidez.append(sz)
+
+    for i in range(npoints-1):
+        dists2[i+1] = dists2[i] + ((xpos2[i] - xpos2[i+1])**2 + (ypos2[i] - ypos2[i+1])**2 + (zpos2[i] - zpos2[i+1])**2)**0.5
+        distend = ((xpos2[i+1] - end[0])**2 + (ypos2[i+1] - end[1])**2 + (zpos2[i+1] - end[2])**2)**2
+        if dists2[i] > nspacing and distend > spacing:
+            conx.append(xpos2[i+1])
+            cony.append(ypos2[i+1])
+            conz.append(zpos2[i+1])
+            nspacing = nspacing + spacing
+    N = len(conx)
+    for i in range(N1, N):
+        if i%2 == 0:
+            sy = cony[i] + pad
+            slope = -1*(pa2*2*(conx[i] - ph2))
+            inter = conz[i] - slope*conx[i]
+            vec = np.array([slope, 1])
+            distvec = sum(vec**2)**0.5
+            normvec = vec/distvec
+            sx = conx[i] -  np.sign(normvec[0])*(spacing-pad + extra)*normvec[0]
+            sz = conz[i] -  np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
+            sidex.append(sx)
+            sidey.append(sy)
+            sidez.append(sz)
+    return conx, cony, conz, sidex, sidey, sidez
+
+
 def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,spacing):
     npoints = 1000
     xpos1 = np.linspace(start[0], mid[0], npoints)
@@ -53,7 +125,7 @@ def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,sp
 
     for i in range(npoints-1):
         dists2[i+1] = dists2[i] + ((xpos2[i] - xpos2[i+1])**2 + (ypos2[i] - ypos2[i+1])**2 + (zpos2[i] - zpos2[i+1])**2)**0.5
-        distend = ((xpos2[i+1] - end[0])**2 + (ypos2[i+1] - end[1])**2 + (zpos2[i+1] - end[2])**2)**2
+        distend = ((xpos2[i+1] - end[0])**2 + (ypos2[i+1] - end[1])**2 + (zpos2[i+1] - end[2])**2)*2
         if dists2[i] > nspacing and distend > spacing:
             conx.append(xpos2[i+1])
             cony.append(ypos2[i+1])
@@ -232,11 +304,45 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         #add side groups
 
 
-
+    #planes connection
     
+    pend1 = ends1s[3]
+    pend2 = [ends1s[3][0]+2*a, ends1s[3][1], ends1s[3][2]]
+    pla = (pend2[1] - pend1[1])/(pend2[0] - pend1[0])
+    plb = pend2[1] - pla*pend2[0] 
+    pmid = [(pend1[0] + pend2[0])/2, (pend1[1] + pend2[1])/2 , (pend1[2] + pend2[2])/2 - c]
+    pendh1 = pmid[0]
+    pendh2 = pmid[0]
+    pendk1 = pmid[2]
+    pendk2 = pmid[2]
+
+    penda1 = (pend1[2] - pendk1)/((pend1[0] - pendh1)**2)
+    penda2 = (pend2[2] - pendk2)/((pend2[0] - pendh2)**2)
+    pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla,plb,penda1, pendh1, pendk1, penda2, pendh2, pendk2, pend1, pend2, pmid,1.6)
+    print("pla", pla, "plb", plb)
+    print("pend1", pend1)
+    print("pend2", pend2)
+    print("pmid", pmid)
+    print("penda1", penda1, "penda2", penda2)
+
+
+    p2end1 = [unitcell[0][0]*a , unitcell[0][1]*b, unitcell[0][2]*c]
+    p2end2 = [unitcell[0][0]*a + 2*a, p2end1[1], p2end1[2]]
+    pla = (p2end2[1] - p2end1[1])/(p2end2[0] - p2end1[0])
+    plb = p2end2[1] - pla*p2end2[0]
+    pmid = [(p2end1[0] + p2end2[0])/2, (p2end1[1] + p2end2[1])/2, (p2end1[2] + p2end2[2])/2 - c]
+    pendh1 = pmid[0]
+    pendh2 = pmid[0]
+    pendk1 = pmid[2]
+    pendk2 = pmid[2]
     
-
-
+    penda1 = (p2end1[2] - pendk1)/((p2end1[0] - pendh1)**2)
+    penda2 = (p2end2[2] - pendk2)/((p2end2[0] - pendh2)**2)
+    print("p2end1", p2end1, "p2end2", p2end2)
+    print("penda1", penda1, "penda2", penda2)
+    p2conx, p2cony, p2conz,p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2, pendh2, pendk2, p2end1, p2end2, pmid, 1.6)
+    print("p2sidex", p2sidex, "p2sidey", p2sidey, "p2sidez", p2sidez)
+    print("p2conx", p2conx, "p2cony", p2cony, "p2conz", p2conz)
 
     count = 1
     mol = 1
@@ -264,9 +370,32 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                         for i in range(len(vars()["connections"+str(s+1)])):
                             atomsinfo.append([count, 5+s, 1, basex + vars()["connections" + str(s+1)][i][0], basey + vars()["connections" + str(s+1)][i][1], basez + vars()["connections" + str(s+1)][i][2]])
                             count = count + 1
-                    if k == Rz -1 and s%2 ==1:
-                        for i in range(len(vars()["connections"+str(s+1)])):
-                            atomsinfo.append([count, 5+s, 1, basex + vars()["connections" + str(s+1)][i][0], basey + vars()["connections" + str(s+1)][i][1], 0 + vars()["connections" + str(s+1)][i][2]])
+                    if k == Rz -1 and s%2 ==1 and (s != 3 or j < Ry-1):
+                        for ii in range(len(vars()["connections"+str(s+1)])):
+                            atomsinfo.append([count, 5+s, 1, basex + vars()["connections" + str(s+1)][ii][0], basey + vars()["connections" + str(s+1)][ii][1], 0 + vars()["connections" + str(s+1)][ii][2]])
+                            count = count + 1
+                    if k == Rz -1 and s==3 and j == Ry-1 and i%2 ==0:
+                        for ii in range(len(pconx)):
+                            atomsinfo.append([count, 5+s, 1, basex + pconx[ii], basey + pcony[ii], 0 + pconz[ii]])
+                            count = count + 1
+                        for ii in range(len(psidex)):
+                            atomsinfo.append([count, 5+s, 1, basex + psidex[ii], basey + psidey[ii], 0 + psidez[ii]])
+                            count = count + 1
+                    elif k == Rz -1 and s==3 and j == Ry -1 and i%2 ==1:
+                        #print("p2conx", p2conx + basex)
+                        #print("p2cony", p2cony)
+                        #print("p2conz", p2conz)
+                        #print("p2sidex", p2sidex + basex)
+                        #print("p2sidey", p2sidey)
+                        #print("p2sidez", p2sidez)
+                        #print("len(p2conx)", len(p2conx))
+                        #print("len(p2sidex)", len(p2sidex))
+
+                        for ii in range(len(p2conx)):
+                            atomsinfo.append([count, 5+s, 1, basex + p2conx[ii], p2cony[ii], 0+ p2conz[ii]])
+                            count = count + 1
+                        for ii in range(len(p2sidex)):
+                            atomsinfo.append([count, 5+s, 1, basex + p2sidex[ii], p2sidey[ii], 0 + p2sidez[ii]])
                             count = count + 1
                 #atomsinfo.append([count, mol, 2, basex+ center[0]*a, basey + center[1]*b, basez + center[2]*c])
                 #count = count + 1
