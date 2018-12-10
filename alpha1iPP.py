@@ -240,25 +240,34 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
 
     count = 1
     mol = 1
-    for k in range(Rz):
-        basez =k*c*zoffset
-        #basez = k*c
-        for j in range(Ry):
-            basey = j*b*2
-            for i in range(Rx):
-                basex = i*a*2 + xoffset*k*c*a 
-                #basex  = i*a*2
-                for ci in range(len(unitcell)):
+    for s in range(4):
+        for k in range(Rz):
+            basez =k*c*zoffset
+            #basez = k*c
+            for j in range(Ry):
+                basey = j*b*2
+                for i in range(Rx):
+                    basex = i*a*2 + xoffset*k*c*a 
+                    #basex  = i*a*2
+                    for ci in range(9):
                         mol = ci//9 + 1
                         #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)*a
-                        x = basex + unitcell[ci,0]*a + unitcell[ci,2]*xoffset*c 
+                        x = basex + unitcell[s*9 + ci,0]*a + unitcell[s*9 + ci,2]*xoffset*c 
                         #print("x", x,"basex", basex, "symmetries[s][0]*a", symmetries[s][0]*a, "symmetries[s][0]", symmetries[s][0])
-                        y = basey + unitcell[ci,1]*b
+                        y = basey + unitcell[s*9 + ci,1]*b
                         #print("y", y, "basey", basey, "symmetries[s][1]*b", symmetries[s][1]*b, "symmetries[s][1]", symmetries[s][1])
                         #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
-                        z = basez + unitcell[ci,2]*c*zoffset
+                        z = basez + unitcell[s*9 + ci,2]*c*zoffset
                         atomsinfo.append([count, mol, 1, x, y, z])
                         count = count + 1
+                    if k == Rz -1 and s%2 == 0:
+                        for i in range(len(vars()["connections"+str(s+1)])):
+                            atomsinfo.append([count, 5+s, 1, basex + vars()["connections" + str(s+1)][i][0], basey + vars()["connections" + str(s+1)][i][1], basez + vars()["connections" + str(s+1)][i][2]])
+                            count = count + 1
+                    if k == Rz -1 and s%2 ==1:
+                        for i in range(len(vars()["connections"+str(s+1)])):
+                            atomsinfo.append([count, 5+s, 1, basex + vars()["connections" + str(s+1)][i][0], basey + vars()["connections" + str(s+1)][i][1], 0 + vars()["connections" + str(s+1)][i][2]])
+                            count = count + 1
                 #atomsinfo.append([count, mol, 2, basex+ center[0]*a, basey + center[1]*b, basez + center[2]*c])
                 #count = count + 1
                 #atomsinfo.append([count, mol, 3, basex, basey, basez])
@@ -270,10 +279,11 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #for m in midpoints:
         #atomsinfo.append([count, 5, 2, m[0], m[1], m[2]])
         #count = count + 1
-    for j in range(4):
-        for i in range(len(vars()["connections"+str(j+1)])):
-            atomsinfo.append([count, 5+j, 1, vars()["connections" + str(j+1)][i][0], vars()["connections" + str(j+1)][i][1], vars()["connections" + str(j+1)][i][2]])
-            count = count + 1
+    
+        #for i in range(len(vars()["connections"+str(s+1)])):
+
+            #atomsinfo.append([count, 5+s, 1, basex + vars()["connections" + str(s+1)][i][0], basey + vars()["connections" + str(s+1)][i][1], basez + vars()["connections" + str(s+1)][i][2]])
+            #count = count + 1
                     
 
     atomsinfo = np.array(atomsinfo)
@@ -348,7 +358,7 @@ def readxyz(filename):
 
 def main():
     readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPC1type.data")
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 1, 1, 1)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 10, 10, 10)
     
     msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = readxyz("custompp-iso.xyz")
