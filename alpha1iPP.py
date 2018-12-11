@@ -500,9 +500,12 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     maxC = 0
     spaceC = 5
     nBeads = sum(moleculeClist)
+    print("nBeads", nBeads)
     nMols  = len(moleculeClist)
+    print("nMols", nMols)
 
     countRef = np.ones(nBeads + spaceC*(nMols-1))
+    print("len(countRef)", len(countRef))
     #from moleculeClist
     for mi,m in enumerate(moleculeClist):
         clist = list(range(maxC, maxC + m))
@@ -511,10 +514,8 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
             if mi < nMols -1:
                 countRef[maxC+m+i] = 0
         maxC = maxC + m + spaceC
-
     
     #print("shownCs", shownCs)
-    countRef = np.ones(shownCs[-1] + 1)
 
 
     atomsinfo = []
@@ -743,7 +744,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 acount = acount + 1
                             count = count + 1
                     
-                    #print("count", count)
+                    #print("acount", acount)
 
     if count < len(countRef):
         print("ERROR: NOT ALL WERE SHOWN")
