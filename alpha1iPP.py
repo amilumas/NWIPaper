@@ -176,6 +176,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     rcoords[:,0] = [float(i) for i in "-0.0727 -0.0765 -0.1021 -0.3087 -0.1146 -0.1044 0.2775 0.0872 0.1026".split()]
     rcoords[:,1] = [float(i) for i in "0.2291 0.1592 0.1602 0.0589 0.0928 0.0854 0.0797 0.1156 0.1221".split()]
     rcoords[:,2] = [float(i) for i in "0.2004 0.2788 0.5098 0.4941 0.6057 0.8428 0.9260 0.9730 1.2109".split()]
+    
     #rcoords = np.zeros((8,3))
     widthy = max(rcoords[:,1]) - min(rcoords[:,1])
     widthx = max(rcoords[:,0]) - min(rcoords[:,0])
@@ -213,8 +214,22 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
             ucount +=1
     #calculate distances between ends:
     #pairs in unit cells
+    
+    #change unit cell order to mesh with order of beads
+    first = unitcell[0]
+    unitcell[0] = unitcell[1]
+    unitcell[1] = first
+
+    mid = unitcell[18]
+    unitcell[18] = unitcell[19]
+    unitcell[19] = mid
+
+
+
+
+
     ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
-    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b, unitcell[10][2]*c], [unitcell[19][0], unitcell[19][1]*b, unitcell[19][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b, unitcell[28][2]*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b, unitcell[1,2]*c]]
+    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b, unitcell[10][2]*c], [unitcell[19][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b, unitcell[28][2]*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b, unitcell[1,2]*c]]
     midpoints = []
     for i in range(len(ends1s)):
         #print("end1", ends1s[i], "end2", ends2s[i])
@@ -316,8 +331,8 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     print("penda1", penda1, "penda2", penda2)
 
 
-    p2end1 = [unitcell[0][0]*a , unitcell[0][1]*b, unitcell[0][2]*c]
-    p2end2 = [unitcell[0][0]*a + 2*a, p2end1[1], p2end1[2]]
+    p2end1 = [unitcell[1][0]*a , unitcell[1][1]*b, unitcell[1][2]*c]
+    p2end2 = [unitcell[1][0]*a + 2*a, p2end1[1], p2end1[2]]
     pla = (p2end2[1] - p2end1[1])/(p2end2[0] - p2end1[0])
     plb = p2end2[1] - pla*p2end2[0]
     pmid = [(p2end1[0] + p2end2[0])/2, (p2end1[1] + p2end2[1])/2, (p2end1[2] + p2end2[2])/2 - c]
@@ -505,23 +520,24 @@ def readxyz(filename):
 def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     shownCs = []
     maxC = 0
-    spaceC = 5
+    spaceC = [5 if m%2 == 0 else 5 for m in moleculeClist]
     nBeads = sum(moleculeClist)
     print("nBeads", nBeads)
     nMols  = len(moleculeClist)
     print("nMols", nMols)
+    
+    countRef = np.ones(nBeads + sum(spaceC[0:len(spaceC)-1]))
 
-    countRef = np.ones(nBeads + spaceC*(nMols-1))
     print("len(countRef)", len(countRef))
     #from moleculeClist
     for mi,m in enumerate(moleculeClist):
         assert (m-2)%3 == 0
         clist = list(range(maxC, maxC + m))
         shownCs.extend(clist)
-        for i in range(spaceC):
+        for i in range(spaceC[mi]):
             if mi < nMols -1:
                 countRef[maxC+m+i] = 0
-        maxC = maxC + m + spaceC
+        maxC = maxC + m + spaceC[mi]
     
     #print("shownCs", shownCs)
 
@@ -562,12 +578,21 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
             ucount += 1
     # calculate distances between ends:
     # pairs in unit cells
+
+    #change unit cell order to mesh with order of beads
+    first = unitcell[0]
+    unitcell[0] = unitcell[1]
+    unitcell[1] = first
+
+    mid = unitcell[18]
+    unitcell[18] = unitcell[19]
+    unitcell[19] = mid
     ends1s = [[unitcell[8][0] * a, unitcell[8][1] * b, unitcell[8][2] * c],
               [unitcell[17][0] * a, unitcell[17][1] * b, unitcell[17][2] * c],
               [unitcell[26][0] * a, unitcell[26][1] * b, unitcell[26][2] * c],
               [unitcell[35][0] * a, unitcell[35][1] * b, unitcell[35][2] * c]]
     ends2s = [[unitcell[10][0] * a, unitcell[10][1] * b, unitcell[10][2] * c],
-              [unitcell[19][0], unitcell[19][1] * b, unitcell[19][2] * c],
+              [unitcell[18][0], unitcell[18][1] * b, unitcell[18][2] * c],
               [unitcell[28][0] * a, unitcell[28][1] * b, unitcell[28][2] * c],
               [unitcell[1, 0] * a, (unitcell[1, 1] + 2) * b, unitcell[1, 2] * c]]
     midpoints = []
@@ -651,7 +676,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2,
                                                                            pendh2, pendk2, pend1, pend2, pmid, 1.6)
 
-    p2end1 = [unitcell[0][0] * a, unitcell[0][1] * b, unitcell[0][2] * c]
+    p2end1 = [unitcell[1][0] * a, unitcell[1][1] * b, unitcell[1][2] * c]
     p2end2 = [unitcell[0][0] * a + 2 * a, p2end1[1], p2end1[2]]
     pla = (p2end2[1] - p2end1[1]) / (p2end2[0] - p2end1[0])
     plb = p2end2[1] - pla * p2end2[0]
@@ -679,7 +704,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
             #cside += 1
         #pconnections1.append([pconx[i], pcony[i], pconz[i]])
 
-    #pconnections2 = []
+    pconnections2 = []
     cside = 0
     for i in range(len(p2conx)):
         pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
@@ -695,6 +720,12 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     count = 0
     acount = 1
     mol = 1
+    moli = 0
+    madded = 0
+    minspace = 5
+    spacecount = minspace
+    alldone = False
+    nc = 0
     for i in range(Rx):
         basex = i * a * 2
         for j in range(Ry):
@@ -713,14 +744,29 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                         tx = x + z * xoffset
                         ty = y
                         tz = z * zoffset
-                        if count < len(countRef) and countRef[count] == 1: 
-                            atomsinfo.append([acount, mol, 1, tx, ty, tz])
+                        if not alldone and madded < moleculeClist[moli] and spacecount >= minspace: 
+                            atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
                             acount = acount + 1
-                        if count < len(countRef) and countRef[count] == 0:
-                            mol = mol + 1
-                            print("mol", mol)
+                            madded  = madded + 1
+                            #print("spacecount", spacecount)
+                        elif (madded == 0 and spacecount < minspace):
+                            if spacecount == 0:
+                                if ci > 0:
+                                    spacecount = spacecount + 1
+                            else:
+                                spacecount = spacecount + 1
+                            #print("tx", tx, "ty", ty, "tz", tz)
+                        if not alldone and madded == moleculeClist[moli]:
+                            moli = moli + 1
+                            madded = 0
+                            spacecount = 0
+                            if moli == len(moleculeClist):
+                                alldone = True
+                            minspace = 5 +nc%2
+                            #print("minspace", minspace)
                         count = count + 1
                     if k == Rzlist[-1] and s % 2 == 0:
+                        nc = nc +1
                         for ii in range(len(vars()["connections" + str(s + 1)])):
                             x = basex + vars()["connections" + str(s + 1)][ii][0]
                             y = basey + vars()["connections" + str(s + 1)][ii][1]
@@ -728,9 +774,10 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                             tx = x + z * xoffset
                             ty = y
                             tz = z * zoffset
-                            if count < len(countRef) and countRef[count] == 1:
-                                atomsinfo.append([acount, mol, 1, tx, ty, tz])
+                            if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
                                 acount = acount + 1
+                                madded = madded +1
                             count = count + 1
                     elif k == Rzlist[-1] and s % 2 == 1 and (s != 3 or j < Ry - 1):
                         for ii in range(len(vars()["connections" + str(s + 1)])):
@@ -740,11 +787,13 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                             tx = x + z * xoffset
                             ty = y
                             tz = z * zoffset
-                            if count < len(countRef) and countRef[count] == 1:
-                                atomsinfo.append([acount,mol, 1, tx, ty, tz])
+                            if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                atomsinfo.append([acount,moli+1, 1, tx, ty, tz])
                                 acount = acount + 1
+                                madded = madded + 1
                             count = count + 1
                     elif k == Rzlist[-1] and s == 3 and j == Ry - 1 and i % 2 == 0:
+                        nc = nc +1
                         for ii in range(len(pconnections1)):
                             x = basex + pconnections1[ii][0]
                             y = basey + pconnections1[ii][1]
@@ -752,9 +801,10 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                             tx = x + z * xoffset
                             ty = y
                             tz = z * zoffset
-                            if count < len(countRef) and countRef[count] == 1:
-                                atomsinfo.append([acount, mol, 1, tx, ty, tz])
+                            if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
                                 acount = acount + 1
+                                madded = madded + 1
                             count = count + 1
 
                     elif k == Rzlist[-1] and s == 3 and j == Ry - 1 and i % 2 == 1:
@@ -766,18 +816,24 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                             tx = x + z * xoffset
                             ty = y
                             tz = z * zoffset
-                            if count < len(countRef) and countRef[count] == 1:
-                                atomsinfo.append([acount, mol, 1, tx, ty, tz])
+                            if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
                                 acount = acount + 1
+                                madded = madded + 1
                             count = count + 1
-                    if count < len(countRef) and countRef[count] == 0:
-                        mol = mol + 1
-                        print("mol", mol)
+                    if not alldone and madded == moleculeClist[moli]:
+                        madded = 0
+
+                        moli = moli + 1
+                        if moli == len(moleculeClist):
+                            alldone = True
+                        #print("mol", mol)
                     #print("acount", acount)
 
     if count < len(countRef) or acount != nBeads+1:
         print("ERROR: NOT ALL WERE SHOWN")
         print("count", count, "len(shownCs)", len(shownCs))
+        print("acount", acount, "nBeads+1", nBeads+1)
     atomsinfo = np.array(atomsinfo)
     writexyz(xyzfile, atomsinfo)
     xlo = min(atomsinfo[:, 3]) - 5
@@ -819,11 +875,11 @@ def checkDistances(atomsinfo):
 
 
 def main():
-    #p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
-    #print("p613MolList",p613MolList)
-    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
-    #msc.writelammpsdatajustatoms("p613MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
-    #readlammpsbondsPPctypes("p613MolinCrystbonds.data", "p613MolinCrystCtype.data")
+    p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
+    print("p613MolList",p613MolList)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
+    msc.writelammpsdatajustatoms("p613MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    readlammpsbondsPPctypes("p613MolinCrystbonds.data", "p613MolinCrystCtype.data")
 
     #p813MolList = makeMolList([9,7,6,12,3,6,1,1,1,1,], [926,1436,1946,2456,2966,3476,3986,11126,12656,32546])
     #print("p813MolList",p813MolList)
@@ -837,13 +893,13 @@ def main():
     #msc.writelammpsdatajustatoms("pMPMolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     #readlammpsbondsPPctypes("pMPMolinCrystbonds.data", "pMPMolinCrystCtype.data")
 
-    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [8,5,8], 2, 2, 2)
+    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz",[3*10 + 2, 3*10 + 2, 3*10 + 2, 10*3 + 2], 5, 5, 5)
     #msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     #readlammpsbondsPPctypes("MolinCrystbonds.data", "MolinCrystCtype.data")
     #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPC1type.data")
-    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 1, 1, 1)
+    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 20, 20, 20)
     
-    msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
+    #msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     checkDistances(atomsinfo)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = readxyz("custompp-iso.xyz")
     #msc.writelammpsdatajustatoms("custompp-iso.data", [xlo, xhi, ylo, yhi, zlo, zhi], [14, 1], len(atomsinfo), atomsinfo)
