@@ -278,26 +278,21 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     connections4 = []
     npoints = [8,6,8,6]
     spacing = [1.54,1.54,1.54,1.54]
+    
     for i in range(4):
-        #xs1 = np.linspace(ends1s[i][0], midpoints[i][0], npoints[i])
-        #ys1 = Aline[i]*xs1 + Bline[i]
-        #zs1 = Aparabola1[i]*(ys1 - Hparabola1[i])**2 + Kparabola1[i]
-        #xs2 = np.linspace(midpoints[i][0], ends2s[i][0], npoints[i])
-        #ys2 = Aline[i]*xs2 + Bline[i]
-        #zs2 = Aparabola2[i]*(ys2 - Hparabola2[i])**2 + Kparabola2[i]
-        conx, cony, conz, sidex, sidey, sidez = linear2parabolaConnect(Aline[i],Bline[i],Aparabola1[i], Hparabola1[i], Kparabola1[i], Aparabola2[i], Hparabola2[i], Kparabola2[i], ends1s[i], ends2s[i],midpoints[i],spacing[i])
-        #print("old xs", xs, "old ys", ys, "old zs", zs)
-        #xs,ys,zs = paraboliclinear(Aline[i],Bline[i],Aparabola[i],Hparabola[i],Kparabola[i],ends1s[i],ends2s[i],spacing[i]) 
-        
-        #print("xs", xs, "ys", ys, "zs", zs)
+        conx, cony, conz, sidex, sidey, sidez = linear2parabolaConnect(Aline[i], Bline[i], Aparabola1[i], Hparabola1[i], Kparabola1[i], Aparabola2[i], Hparabola2[i], Kparabola2[i], ends1s[i], ends2s[i], midpoints[i], spacing[i])
         sidec = 0
         for j in range(len(conx)):
-            vars()["connections"+str(i+1)].append([conx[j], cony[j], conz[j]])
-            if j%2 == 0:
-                vars()["connections"+str(i+1)].append([sidex[sidec], sidey[sidec], sidez[sidec]])
+            vars()["connections" + str(i + 1)].append([conx[j], cony[j], conz[j]])
+            if j % 2 == 0:
+                vars()["connections" + str(i + 1)].append([sidex[sidec], sidey[sidec], sidez[sidec]])
                 sidec += 1
-        #add side groups
+        #for j in range(len(conx)//2, len(conx)):
+            #if j % 2 == 0:
+                #vars()["connections" + str(i+1)].append([sidex[sidec], sidey[sidec], sidez[sidec]])
+                #sidec +=1
 
+            #vars()["connections" + str(i+1)].append([conx[j], cony[j], conz[j]])
 
     #planes connection
     
@@ -342,17 +337,29 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     cside = 0
     for i in range(len(pconx)):
         pconnections1.append([pconx[i], pcony[i], pconz[i]])
-        if i%2 == 0:
+        if i % 2 == 0:
             pconnections1.append([psidex[cside], psidey[cside], psidez[cside]])
-            cside +=1
+            cside += 1
+    #for i in range(len(pconx)//2, len(pconx)):
+        #if i % 2 == 0:
+            #pconnections1.append([psidex[cside], psidey[cside], psidez[cside]])
+            #cside += 1
+        #pconnections1.append([pconx[i], pcony[i], pconz[i]])
 
     pconnections2 = []
     cside = 0
     for i in range(len(p2conx)):
         pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
-        if i%2 == 0:
+        if i % 2 == 0:
             pconnections2.append([p2sidex[cside], p2sidey[cside], p2sidez[cside]])
-            cside +=1
+            cside += 1
+    #for i in range(len(p2conx)//2, len(p2conx)):
+        #if i % 2 == 0:
+            #pconnections2.append([p2sidex[cside], p2sidey[cside], p2sidez[cside]])
+            #cside += 1
+        #pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
+
+    
 
     count = 1
     for i in range(Rx):
@@ -388,7 +395,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                             tx = x + z*xoffset
                             ty = y 
                             tz = z*zoffset
-                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
+                            atomsinfo.append([count, 5+s, 2+s, tx, ty, tz])
                             count = count + 1
                     if k == Rzlist[-1] and s%2 ==1 and (s != 3 or j < Ry-1):
                         for ii in range(len(vars()["connections"+str(s+1)])):
@@ -398,7 +405,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                             tx = x + z*xoffset
                             ty = y
                             tz = z*zoffset
-                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
+                            atomsinfo.append([count, 5+s, 2+s, tx, ty, tz])
                             count = count + 1
                     if k == Rzlist[-1] and s==3 and j == Ry-1 and i%2 ==0:
                         for ii in range(len(pconnections1)):
@@ -409,7 +416,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                             ty = y
                             tz = z*zoffset
 
-                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
+                            atomsinfo.append([count, 5+s, 2+s, tx, ty, tz])
                             count = count + 1
 
                     elif k == Rzlist[-1] and s==3 and j == Ry -1 and i%2 ==1:
@@ -421,7 +428,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                             tx = x + z*xoffset
                             ty = y
                             tz = z*zoffset
-                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
+                            atomsinfo.append([count, 5+s, 2+s, tx, ty, tz])
                             count = count + 1
                     
 
@@ -622,6 +629,12 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
             if j % 2 == 0:
                 vars()["connections" + str(i + 1)].append([sidex[sidec], sidey[sidec], sidez[sidec]])
                 sidec += 1
+        #for j in range(len(conx)//2, len(conx)):
+            #if j % 2 == 0:
+                #vars()["connections" + str(i+1)].append([sidex[sidec], sidey[sidec], sidez[sidec]])
+                #sidec +=1
+
+            #vars()["connections" + str(i+1)].append([conx[j], cony[j], conz[j]])
 
     pend1 = ends1s[3]
     pend2 = [ends1s[3][0] + 2 * a, ends1s[3][1], ends1s[3][2]]
@@ -660,17 +673,28 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
         if i % 2 == 0:
             pconnections1.append([psidex[cside], psidey[cside], psidez[cside]])
             cside += 1
+    #for i in range(len(pconx)//2, len(pconx)):
+        #if i % 2 == 0:
+            #pconnections1.append([psidex[cside], psidey[cside], psidez[cside]])
+            #cside += 1
+        #pconnections1.append([pconx[i], pcony[i], pconz[i]])
 
-    pconnections2 = []
+    #pconnections2 = []
     cside = 0
     for i in range(len(p2conx)):
         pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
         if i % 2 == 0:
             pconnections2.append([p2sidex[cside], p2sidey[cside], p2sidez[cside]])
             cside += 1
+    #for i in range(len(p2conx)//2, len(p2conx)):
+        #if i % 2 == 0:
+            #pconnections2.append([p2sidex[cside], p2sidey[cside], p2sidez[cside]])
+            #cside += 1
+        #pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
 
     count = 0
     acount = 1
+    mol = 1
     for i in range(Rx):
         basex = i * a * 2
         for j in range(Ry):
@@ -683,7 +707,6 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                 for k in Rzlist:
                     basez = k * c
                     for ci in range(9):
-                        mol = ci // 9 + 1
                         x = basex + unitcell[s * 9 + ci, 0] * a
                         y = basey + unitcell[s * 9 + ci, 1] * b
                         z = basez + unitcell[s * 9 + ci, 2] * c
@@ -691,8 +714,11 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                         ty = y
                         tz = z * zoffset
                         if count < len(countRef) and countRef[count] == 1: 
-                            atomsinfo.append([acount, s + 1, 1, tx, ty, tz])
+                            atomsinfo.append([acount, mol, 1, tx, ty, tz])
                             acount = acount + 1
+                        if count < len(countRef) and countRef[count] == 0:
+                            mol = mol + 1
+                            print("mol", mol)
                         count = count + 1
                     if k == Rzlist[-1] and s % 2 == 0:
                         for ii in range(len(vars()["connections" + str(s + 1)])):
@@ -703,7 +729,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                             ty = y
                             tz = z * zoffset
                             if count < len(countRef) and countRef[count] == 1:
-                                atomsinfo.append([acount, 5 + s, 1, tx, ty, tz])
+                                atomsinfo.append([acount, mol, 1, tx, ty, tz])
                                 acount = acount + 1
                             count = count + 1
                     elif k == Rzlist[-1] and s % 2 == 1 and (s != 3 or j < Ry - 1):
@@ -715,7 +741,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                             ty = y
                             tz = z * zoffset
                             if count < len(countRef) and countRef[count] == 1:
-                                atomsinfo.append([acount, 5 + s, 1, tx, ty, tz])
+                                atomsinfo.append([acount,mol, 1, tx, ty, tz])
                                 acount = acount + 1
                             count = count + 1
                     elif k == Rzlist[-1] and s == 3 and j == Ry - 1 and i % 2 == 0:
@@ -727,7 +753,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                             ty = y
                             tz = z * zoffset
                             if count < len(countRef) and countRef[count] == 1:
-                                atomsinfo.append([acount, 5 + s, 1, tx, ty, tz])
+                                atomsinfo.append([acount, mol, 1, tx, ty, tz])
                                 acount = acount + 1
                             count = count + 1
 
@@ -741,10 +767,12 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                             ty = y
                             tz = z * zoffset
                             if count < len(countRef) and countRef[count] == 1:
-                                atomsinfo.append([acount, 5 + s, 1, tx, ty, tz])
+                                atomsinfo.append([acount, mol, 1, tx, ty, tz])
                                 acount = acount + 1
                             count = count + 1
-                    
+                    if count < len(countRef) and countRef[count] == 0:
+                        mol = mol + 1
+                        print("mol", mol)
                     #print("acount", acount)
 
     if count < len(countRef) or acount != nBeads+1:
@@ -768,6 +796,24 @@ def makeMolList(Nx, Carbons):
             molList.append(x)
 
     return molList 
+def checkDistances(atomsinfo):
+    N = len(atomsinfo)
+    for i in range(1,N-1):
+        x1 = atomsinfo[i-1][3]
+        y1 = atomsinfo[i-1][4]
+        z1 = atomsinfo[i-1][5]
+        x2 = atomsinfo[i][3]
+        y2 = atomsinfo[i][4]
+        z2 = atomsinfo[i][5]
+        x3 = atomsinfo[i+1][3]
+        y3 = atomsinfo[i+1][4]
+        z3 = atomsinfo[i+1][5]
+
+        dist1 = ((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**0.5
+        dist2 = ((x2 - x3)**2 + (y2 - y3)**2 + (z2 - z3)**2)**0.5
+        if dist1 > 2 and dist2 > 2:
+            print("i", i, "dist1", dist1, "dist2", dist2, "atom1", i, "atom2", i+1, "atom3", i+2)
+        
 
         
 
@@ -777,7 +823,7 @@ def main():
     #print("p613MolList",p613MolList)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
     #msc.writelammpsdatajustatoms("p613MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
-    readlammpsbondsPPctypes("p613MolinCrystbonds.data", "p613MolinCrystCtype.data")
+    #readlammpsbondsPPctypes("p613MolinCrystbonds.data", "p613MolinCrystCtype.data")
 
     #p813MolList = makeMolList([9,7,6,12,3,6,1,1,1,1,], [926,1436,1946,2456,2966,3476,3986,11126,12656,32546])
     #print("p813MolList",p813MolList)
@@ -791,13 +837,14 @@ def main():
     #msc.writelammpsdatajustatoms("pMPMolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     #readlammpsbondsPPctypes("pMPMolinCrystbonds.data", "pMPMolinCrystCtype.data")
 
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [8,5,8], 2, 2, 2)
-    msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
-    readlammpsbondsPPctypes("MolinCrystbonds.data", "MolinCrystCtype.data")
+    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [8,5,8], 2, 2, 2)
+    #msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    #readlammpsbondsPPctypes("MolinCrystbonds.data", "MolinCrystCtype.data")
     #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPC1type.data")
-    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 10, 10, 10)
+    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 1, 1, 1)
     
-    #msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
+    msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
+    checkDistances(atomsinfo)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = readxyz("custompp-iso.xyz")
     #msc.writelammpsdatajustatoms("custompp-iso.data", [xlo, xhi, ylo, yhi, zlo, zhi], [14, 1], len(atomsinfo), atomsinfo)
 main()
