@@ -470,7 +470,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     return atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi
 
 def readlammpsbondsPPctypes(filename,newfile):
-    Cmasstypes = [13.019, 14.027, 15.035]
+    Cmasstypes = [15.035, 14.027, 13.019]
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata(filename)
     #change atomtypes in based on number of bonds
     #loop through bondsinfo
@@ -875,23 +875,23 @@ def checkDistances(atomsinfo):
 
 
 def main():
-    p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
-    print("p613MolList",p613MolList)
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
-    msc.writelammpsdatajustatoms("p613MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    #p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
+    #print("p613MolList",p613MolList)
+    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
+    #msc.writelammpsdatajustatoms("p613MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     readlammpsbondsPPctypes("p613MolinCrystbonds.data", "p613MolinCrystCtype.data")
 
     #p813MolList = makeMolList([9,7,6,12,3,6,1,1,1,1,], [926,1436,1946,2456,2966,3476,3986,11126,12656,32546])
     #print("p813MolList",p813MolList)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p813MolinCryst.xyz", p813MolList, 20, 20, 20)
     #msc.writelammpsdatajustatoms("p813MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
-    #readlammpsbondsPPctypes("p813MolinCrystbonds.data", "p813MolinCrystCtype.data")
+    readlammpsbondsPPctypes("p813MolinCrystbonds.data", "p813MolinCrystCtype.data")
 
-    #pMPMolList = makeMolList([3, 4, 10, 11, 8, 4, 1, 1, 1, 1, 1], [926, 1526, 2126, 2726, 3326, 3926, 4526, 6326, 6926, 8126, 54326])
-    #print("pMPMolList",pMPMolList)
-    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("pMPMolinCryst.xyz", pMPMolList, 20, 20, 20)
-    #msc.writelammpsdatajustatoms("pMPMolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
-    #readlammpsbondsPPctypes("pMPMolinCrystbonds.data", "pMPMolinCrystCtype.data")
+    pMPMolList = makeMolList([3, 4, 10, 11, 8, 4, 1, 1, 1, 1, 1], [926, 1526, 2126, 2726, 3326, 3926, 4526, 6326, 6926, 8126, 54326])
+    print("pMPMolList",pMPMolList)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("pMPMolinCryst.xyz", pMPMolList, 20, 20, 20)
+    msc.writelammpsdatajustatoms("pMPMolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    readlammpsbondsPPctypes("pMPMolinCrystbonds.data", "pMPMolinCrystCtype.data")
 
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz",[3*10 + 2, 3*10 + 2, 3*10 + 2, 10*3 + 2], 5, 5, 5)
     #msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
