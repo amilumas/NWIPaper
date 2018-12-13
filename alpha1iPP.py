@@ -3,7 +3,7 @@ import makesemicrystallineLmpsfEMC as msc
 import math
 
 
-def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, mid, spacing):
+def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, mid, spacing, sign=1):
     npoints = 1000
     xpos1 = np.linspace(start[0], mid[0], npoints)
     xpos2 = np.linspace(mid[0], end[0], npoints)
@@ -60,14 +60,14 @@ def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, m
     N = len(conx)
     for i in range(N1, N):
         if i%2 == 0:
-            sy = cony[i] + pad
+            sy = cony[i] + pad*sign
             slope = -1*(pa2*2*(conx[i] - ph2))
             inter = conz[i] - slope*conx[i]
             vec = np.array([slope, 1])
             distvec = sum(vec**2)**0.5
             normvec = vec/distvec
-            sx = conx[i] -  np.sign(normvec[0])*(spacing-pad + extra)*normvec[0]
-            sz = conz[i] -  np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
+            sx = conx[i] -np.sign(normvec[0])*(spacing-pad + extra)*normvec[0]
+            sz = conz[i] -np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
             sidex.append(sx)
             sidey.append(sy)
             sidez.append(sz)
@@ -324,7 +324,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
 
     penda1 = (pend1[2] - pendk1)/((pend1[0] - pendh1)**2)
     penda2 = (pend2[2] - pendk2)/((pend2[0] - pendh2)**2)
-    pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla,plb,penda1, pendh1, pendk1, penda2, pendh2, pendk2, pend1, pend2, pmid,1.6)
+    pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla,plb,penda1, pendh1, pendk1, penda2, pendh2, pendk2, pend1, pend2, pmid,1.5,)
     print("pla", pla, "plb", plb)
     print("pend1", pend1)
     print("pend2", pend2)
@@ -332,7 +332,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     print("penda1", penda1, "penda2", penda2)
 
 
-    p2end1 = [unitcell[0][0]*a , unitcell[0][1]*b, unitcell[0][2]*c]
+    p2end1 = [unitcell[0][0]*a , unitcell[0][1]*b, unitcell[0][2]*c - 0.5]
     p2end2 = [unitcell[0][0]*a + 2*a, p2end1[1], p2end1[2]]
     pla = (p2end2[1] - p2end1[1])/(p2end2[0] - p2end1[0])
     plb = p2end2[1] - pla*p2end2[0]
@@ -346,7 +346,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     penda2 = (p2end2[2] - pendk2)/((p2end2[0] - pendh2)**2)
     print("p2end1", p2end1, "p2end2", p2end2)
     print("penda1", penda1, "penda2", penda2)
-    p2conx, p2cony, p2conz,p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2, pendh2, pendk2, p2end1, p2end2, pmid, 1.6)
+    p2conx, p2cony, p2conz,p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2, pendh2, pendk2, p2end1, p2end2, pmid, 1.5, sign=-1)
     print("p2sidex", p2sidex, "p2sidey", p2sidey, "p2sidez", p2sidez)
     print("p2conx", p2conx, "p2cony", p2cony, "p2conz", p2conz)
     pconnections1 = []
@@ -924,7 +924,7 @@ def checkDistances(atomsinfo):
 
 
 def checkNumberofPosBondsandAdd(atomsinfo):
-    threshold = 1.9
+    threshold = 1.88
     N = len(atomsinfo)
     print("natoms", N)
     nbonds = 0
