@@ -913,12 +913,13 @@ def checkDistances(atomsinfo):
 
 def checkNumberofPosBondsandAdd(atomsinfo):
     threshold = 1.7
-    natoms = len(atomsinfo)
+    N = len(atomsinfo)
+    print("natoms", N)
     nbonds = 0
     atoms1 = []
     atoms2 = []
-    for i in range(natoms):
-        for j in range(i+1, min(i+10, natoms)):
+    for i in range(0,N):
+        for j in range(i+1, min(i+5, N)):
             x1 = atomsinfo[i,3]
             x2 = atomsinfo[j,3]
             y1 = atomsinfo[i,4]
@@ -928,11 +929,11 @@ def checkNumberofPosBondsandAdd(atomsinfo):
             dist = ((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**0.5
             if dist < threshold:
                 nbonds = nbonds +1
-                print("nbonds", nbonds, "i", i, "j", j)
+                #print("nbonds", nbonds, "i", i, "j", j)
                 atoms1.append(i+1)
                 atoms2.append(j+1)
 
-    print("possible bonds", nbonds)
+    print("added bonds", nbonds)
     bondsinfo = np.zeros((nbonds, 4))
     for i in range(nbonds):
         bondsinfo[i,0] = i+1
@@ -955,9 +956,9 @@ def main():
     #msc.writelammpsdatajustatoms("MolinCryst.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     checkDistances(atomsinfo)
     msc.writelammpsdatajustatoms("p613MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
-    #bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
-    #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCryst.data")
-    #msc.writelammpsdataonebondtype("p613MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
+    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCryst.data")
+    msc.writelammpsdataonebondtype("p613MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     
     #readlammpsbondsPPctypes("p613MolinCrystbonds.data", "p613MolinCrystCtype.data")
     #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCrystCtypebonds.data")
