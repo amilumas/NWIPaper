@@ -592,9 +592,9 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     unitcell[0,:] = list(unitcell[1])
     unitcell[1,:] = first
     # swich another unit cell
-    switch  = list(unitcell[11])
-    unitcell[11] = list(unitcell[12])
-    unitcell[12] = switch
+    #switch  = list(unitcell[11])
+    #unitcell[11] = list(unitcell[12])
+    #unitcell[12] = switch
 
     mid = list(unitcell[18,:])
     unitcell[18,:] = list(unitcell[19,:])
@@ -775,7 +775,8 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                             spacecount = 0
                             if moli == len(moleculeClist):
                                 alldone = True
-                            minspace = 5 +nc%2
+                            #minspace = 5 +nc%2
+                            minspace = 5 
                             #print("minspace", minspace)
                         count = count + 1
                     if k == Rzlist[-1] and s % 2 == 0:
