@@ -381,28 +381,26 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #   unitcellnew[9+i,:] = list(unitcell[17-i,:])
     #   unitcellnew[27+i,:] = list(unitcell[35-i,:])
     unitcellReverse = np.copy(unitcell)
-    #1 3 2 4
-    #for i in range(9):
-        #unitcellReverse[9+i,:] = list(unitcell[17-i,:])
-        #unitcellReverse[18+i,:] = list(unitcell[26-i,:])
+    for i in range(36):
+        unitcellReverse[i,:] = list(unitcell[35-i,:])
 
     count = 1
     zcount = 0
     for i in range(Rx):
         basex = i*a*2
         if i%2 == 0:
-            Rylist = list(range(Ry))
             unitcellnew = np.copy(unitcell)
         else:
-            #Rylist = list(range(Ry-1, -1, -1))
+            unitcellnew = np.copy(unitcellReverse)
+        if i%2 == 0:
             Rylist = list(range(Ry))
-            #unitcellnew = np.copy(unitcellReverse)
-        print("Rylist", Rylist)
+        else:
+            Rylist = list(range(Ry-1, -1, -1))
+            #Rylist = list(range(Ry))
         for j in Rylist:
             basey = j*b*2
-            print("basey", basey)
             for s in range(4):
-                if (s%2):
+                if (s%2 == i%2):
                     Rzlist = list(range(Rz))
                     zcount = zcount + 1
                 else:
