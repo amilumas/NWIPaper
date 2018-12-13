@@ -387,7 +387,6 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     count = 1
     zcount = 0
     reverse = False
-    srlist = [3, 0, 1, 2]
     for i in range(Rx):
         basex = i*a*2
         if i%2 == 0:
@@ -426,22 +425,19 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                         tz = z*zoffset
                         atomsinfo.append([count, s+1, 1, tx, ty, tz])
                         count = count + 1
-                    if reverse:
-                        sr = srlist[s]
-                    if k == Rzlist[-1] and (s%2 == 0 or (reverse and s%2)):
-                        if reverse and ((j != Rylist[0] and s ==0 ) or s==2):
-                            sr = srlist[s]
-                            for ii in range(len(vars()["connections"+str((sr+1))]) - 1,-1,-1):
-                                x = basex + vars()["connections" + str((sr+1))][ii][0]
-                                y = basey + vars()["connections" + str((sr+1))][ii][1]
-                                z = basez + vars()["connections" + str((sr+1))][ii][2]
+                    if k == Rzlist[-1] and s%2 == 0:
+                        if reverse and (s==2 or j != Rylist[0]):
+                            for ii in range(len(vars()["connections"+str(5 - (s+1))]) - 1,-1,-1):
+                                x = basex + vars()["connections" + str(5-(s+1))][ii][0]
+                                y = basey + vars()["connections" + str(5-(s+1))][ii][1]
+                                z = basez + vars()["connections" + str(5-(s+1))][ii][2]
                                 tx = x + z*xoffset
                                 ty = y
                                 tz = z*zoffset
-                                atomsinfo.append([count,500+s, 1, tx, ty, tz])
+                                atomsinfo.append([count,5+s, 1, tx, ty, tz])
                                 count = count + 1
                              
-                        elif not reverse and (s==0 or s==2):
+                        else:
                             for ii in range(len(vars()["connections"+str(s+1)])):
                                 x = basex + vars()["connections" + str(s+1)][ii][0]
                                 y = basey + vars()["connections" + str(s+1)][ii][1]
@@ -449,15 +445,14 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                                 tx = x + z*xoffset
                                 ty = y 
                                 tz = z*zoffset
-                                atomsinfo.append([count, 600+s, 1, tx, ty, tz])
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                                 count = count + 1
-                    if k == Rzlist[-1] and s%2 ==1 and ((s != 3 or j != Rylist[-1]) or (reverse and s%2 ==0  and (s!= 0 or j!= Rylist[-1] ))):
+                    if k == Rzlist[-1] and s%2 ==1 and (s != 3 or j < Ry-1):
                         if reverse:
-                            sr = srlist[s]
-                            for ii in range(len(vars()["connections"+str((sr+1))]) - 1,-1,-1):
-                                x = basex + vars()["connections" + str((sr+1))][ii][0]
-                                y = basey + vars()["connections" + str((sr+1))][ii][1]
-                                z = basez + vars()["connections" + str((sr+1))][ii][2]
+                            for ii in range(len(vars()["connections"+str(5 - (s+1))]) - 1,-1,-1):
+                                x = basex + vars()["connections" + str(5-(s+1))][ii][0]
+                                y = basey + vars()["connections" + str(5-(s+1))][ii][1]
+                                z = basez + vars()["connections" + str(5-(s+1))][ii][2]
                                 tx = x + z*xoffset
                                 ty = y
                                 tz = z*zoffset
