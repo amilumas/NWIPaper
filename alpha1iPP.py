@@ -3,7 +3,7 @@ import makesemicrystallineLmpsfEMC as msc
 import math
 
 
-def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, mid, spacing, sign=1):
+def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, mid, spacing):
     npoints = 1000
     xpos1 = np.linspace(start[0], mid[0], npoints)
     xpos2 = np.linspace(mid[0], end[0], npoints)
@@ -60,14 +60,14 @@ def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, m
     N = len(conx)
     for i in range(N1, N):
         if i%2 == 0:
-            sy = cony[i] + pad*sign
+            sy = cony[i] + pad
             slope = -1*(pa2*2*(conx[i] - ph2))
             inter = conz[i] - slope*conx[i]
             vec = np.array([slope, 1])
             distvec = sum(vec**2)**0.5
             normvec = vec/distvec
-            sx = conx[i] -np.sign(normvec[0])*(spacing-pad + extra)*normvec[0]
-            sz = conz[i] -np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
+            sx = conx[i] -  np.sign(normvec[0])*(spacing-pad + extra)*normvec[0]
+            sz = conz[i] -  np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
             sidex.append(sx)
             sidey.append(sy)
             sidez.append(sz)
@@ -324,7 +324,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
 
     penda1 = (pend1[2] - pendk1)/((pend1[0] - pendh1)**2)
     penda2 = (pend2[2] - pendk2)/((pend2[0] - pendh2)**2)
-    pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla,plb,penda1, pendh1, pendk1, penda2, pendh2, pendk2, pend1, pend2, pmid,1.5,)
+    pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla,plb,penda1, pendh1, pendk1, penda2, pendh2, pendk2, pend1, pend2, pmid,1.6)
     print("pla", pla, "plb", plb)
     print("pend1", pend1)
     print("pend2", pend2)
@@ -332,7 +332,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     print("penda1", penda1, "penda2", penda2)
 
 
-    p2end1 = [unitcell[0][0]*a , unitcell[0][1]*b, unitcell[0][2]*c - 0.5]
+    p2end1 = [unitcell[0][0]*a , unitcell[0][1]*b, unitcell[0][2]*c]
     p2end2 = [unitcell[0][0]*a + 2*a, p2end1[1], p2end1[2]]
     pla = (p2end2[1] - p2end1[1])/(p2end2[0] - p2end1[0])
     plb = p2end2[1] - pla*p2end2[0]
@@ -346,7 +346,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     penda2 = (p2end2[2] - pendk2)/((p2end2[0] - pendh2)**2)
     print("p2end1", p2end1, "p2end2", p2end2)
     print("penda1", penda1, "penda2", penda2)
-    p2conx, p2cony, p2conz,p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2, pendh2, pendk2, p2end1, p2end2, pmid, 1.5, sign=-1)
+    p2conx, p2cony, p2conz,p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2, pendh2, pendk2, p2end1, p2end2, pmid, 1.6)
     print("p2sidex", p2sidex, "p2sidey", p2sidey, "p2sidez", p2sidez)
     print("p2conx", p2conx, "p2cony", p2cony, "p2conz", p2conz)
     pconnections1 = []
@@ -375,35 +375,35 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
             #cside += 1
         #pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
 
-    #unitcellnew = np.copy(unitcell) 
-    #switch order for s=1 and s = 3
-    #for i in range(9):
-    #   unitcellnew[9+i,:] = list(unitcell[17-i,:])
-    #   unitcellnew[27+i,:] = list(unitcell[35-i,:])
+    unitcellnew = np.copy(unitcell) 
+    #Reverse
     unitcellReverse = np.copy(unitcell)
     for i in range(36):
         unitcellReverse[i,:] = list(unitcell[35-i,:])
-
+    #reverse first nine order
+    oldunitCellR = np.copy(unitcellReverse)
+    #for i in range(9):
+    #    unitcellReverse[i,:] = list(oldunitCellR[8-i,:])
     count = 1
     zcount = 0
     reverse = False
+    srlist = [3, 2, 1, 0]
+    srclist = [2, 1, 0, 3]
     for i in range(Rx):
         basex = i*a*2
         if i%2 == 0:
-            unitcellnew = np.copy(unitcell)
-            reverse = False
-        else:
-            unitcellnew = np.copy(unitcellReverse)
-            reverse = True
-        if i%2 == 0:
             Rylist = list(range(Ry))
+            reverse = False
+            unitcellnew = np.copy(unitcell)
         else:
             Rylist = list(range(Ry-1, -1, -1))
+            reverse = True
+            unitcellnew = np.copy(unitcellReverse)
             #Rylist = list(range(Ry))
         for j in Rylist:
             basey = j*b*2
             for s in range(4):
-                if (s%2 == i%2):
+                if (s%2 == 0):
                     Rzlist = list(range(Rz))
                     zcount = zcount + 1
                 else:
@@ -411,33 +411,25 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                     zcount = zcount + 1
                 for k in Rzlist:
                     basez = k*c
+                    
+                    
                     for ci in range(9):
-                        mol = ci//9 + 1
-                        #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)*a
-                        x = basex + unitcellnew[s*9 + ci,0]*a 
-                        #print("x", x,"basex", basex, "symmetries[s][0]*a", symmetries[s][0]*a, "symmetries[s][0]", symmetries[s][0])
-                        y = basey + unitcellnew[s*9 + ci,1]*b
-                        #print("y", y, "basey", basey, "symmetries[s][1]*b", symmetries[s][1]*b, "symmetries[s][1]", symmetries[s][1])
-                        #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
-                        z = basez + unitcellnew[s*9 + ci,2]*c
-                        tx = x + z*xoffset
-                        ty = y
-                        tz = z*zoffset
-                        atomsinfo.append([count, s+1, 1, tx, ty, tz])
-                        count = count + 1
-                    if k == Rzlist[-1] and s%2 == 0:
-                        if reverse and (s==2 or j != Rylist[0]):
-                            for ii in range(len(vars()["connections"+str(5 - (s+1))]) - 1,-1,-1):
-                                x = basex + vars()["connections" + str(5-(s+1))][ii][0]
-                                y = basey + vars()["connections" + str(5-(s+1))][ii][1]
-                                z = basez + vars()["connections" + str(5-(s+1))][ii][2]
-                                tx = x + z*xoffset
-                                ty = y
-                                tz = z*zoffset
-                                atomsinfo.append([count,500+s, 1, tx, ty, tz])
-                                count = count + 1
-                             
-                        else:
+                            mol = ci//9 + 1
+                            #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)*a
+                            x = basex + unitcellnew[s*9 + ci,0]*a 
+                            #print("x", x,"basex", basex, "symmetries[s][0]*a", symmetries[s][0]*a, "symmetries[s][0]", symmetries[s][0])
+                            y = basey + unitcellnew[s*9 + ci,1]*b
+                            #print("y", y, "basey", basey, "symmetries[s][1]*b", symmetries[s][1]*b, "symmetries[s][1]", symmetries[s][1])
+                            #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
+                            z = basez + unitcellnew[s*9 + ci,2]*c
+                            tx = x + z*xoffset
+                            ty = y
+                            tz = z*zoffset
+                            atomsinfo.append([count, s+1, 1, tx, ty, tz])
+                            count = count + 1
+
+                    if reverse == False:
+                        if k == Rzlist[-1] and s%2 == 0:
                             for ii in range(len(vars()["connections"+str(s+1)])):
                                 x = basex + vars()["connections" + str(s+1)][ii][0]
                                 y = basey + vars()["connections" + str(s+1)][ii][1]
@@ -447,18 +439,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                                 tz = z*zoffset
                                 atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                                 count = count + 1
-                    elif k == Rzlist[-1] and s%2 ==1 and ((s != 3 or j !=Rylist[-1]) or (reverse)):
-                        if reverse:
-                            for ii in range(len(vars()["connections"+str(5 - (s+1))]) - 1,-1,-1):
-                                x = basex + vars()["connections" + str(5-(s+1))][ii][0]
-                                y = basey + vars()["connections" + str(5-(s+1))][ii][1]
-                                z = basez + vars()["connections" + str(5-(s+1))][ii][2]
-                                tx = x + z*xoffset
-                                ty = y
-                                tz = z*zoffset
-                                atomsinfo.append([count,5+s, 1, tx, ty, tz])
-                                count = count + 1
-                        else:
+                        if k == Rzlist[-1] and s%2 ==1 and (s != 3 or j < Ry-1):
                             for ii in range(len(vars()["connections"+str(s+1)])):
                                 x = basex + vars()["connections" + str(s+1)][ii][0]
                                 y = basey + vars()["connections" + str(s+1)][ii][1]
@@ -468,30 +449,76 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                                 tz = z*zoffset
                                 atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                                 count = count + 1
-                    elif k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==0:
-                        
-                        for ii in range(len(pconnections1)):
-                            x = basex + pconnections1[ii][0]
-                            y = basey + pconnections1[ii][1]
-                            z = pconnections1[ii][2]
-                            tx = x + z*xoffset
-                            ty = y
-                            tz = z*zoffset
+                        if k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==0:
+                            for ii in range(len(pconnections1)):
+                                x = basex + pconnections1[ii][0]
+                                y = basey + pconnections1[ii][1]
+                                z = pconnections1[ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
 
-                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
-                            count = count + 1
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
+                                count = count + 1
 
-                    elif k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==1:
+                        elif k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==1:
 
-                        for ii in range(len(pconnections2)):
-                            x = basex  + pconnections2[ii][0]
-                            y = pconnections2[ii][1]
-                            z = pconnections2[ii][2]
-                            tx = x + z*xoffset
-                            ty = y
-                            tz = z*zoffset
-                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
-                            count = count + 1
+                            for ii in range(len(pconnections2)):
+                                x = basex  + pconnections2[ii][0]
+                                y = pconnections2[ii][1]
+                                z = pconnections2[ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
+                                count = count + 1
+
+                    else: 
+                        sr = srclist[s]
+                        print("sr", sr)
+                        if k == Rzlist[-1] and sr%2 == 0:
+                            for ii in range(len(vars()["connections"+str(sr+1)])-1, -1, -1):
+                                x = basex + vars()["connections" + str(sr+1)][ii][0]
+                                y = basey + vars()["connections" + str(sr+1)][ii][1]
+                                z = basez + vars()["connections" + str(sr+1)][ii][2]
+                                tx = x + z*xoffset
+                                ty = y 
+                                tz = z*zoffset
+                                atomsinfo.append([count, 5+sr, 1, tx, ty, tz])
+                                count = count + 1
+                        if k == Rzlist[-1] and sr%2 ==1 and (sr != 3 or j < Ry-1):
+                            for ii in range(len(vars()["connections"+str(sr+1)])-1, -1, -1):
+                                x = basex + vars()["connections" + str(sr+1)][ii][0]
+                                y = basey + vars()["connections" + str(sr+1)][ii][1]
+                                z = vars()["connections" + str(sr+1)][ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                atomsinfo.append([count, 5+sr, 1, tx, ty, tz])
+                                count = count + 1
+                        if k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==0:
+                            for ii in range(len(pconnections1)):
+                                x = basex + pconnections1[ii][0]
+                                y = basey + pconnections1[ii][1]
+                                z = pconnections1[ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+
+                                atomsinfo.append([count, 5+sr, 1, tx, ty, tz])
+                                count = count + 1
+
+                        elif k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==1:
+
+                            for ii in range(len(pconnections2)):
+                                x = basex  + pconnections2[ii][0]
+                                y = pconnections2[ii][1]
+                                z = pconnections2[ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                atomsinfo.append([count, 5+sr, 1, tx, ty, tz])
+                                count = count + 1
                     
 
     atomsinfo = np.array(atomsinfo)
@@ -958,7 +985,7 @@ def checkDistances(atomsinfo):
 
 
 def checkNumberofPosBondsandAdd(atomsinfo):
-    threshold = 1.88
+    threshold = 1.9
     N = len(atomsinfo)
     print("natoms", N)
     nbonds = 0
