@@ -24,7 +24,7 @@ def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, m
     dists1[0] = 0
     pad = 1.5
     extra = 0
-    nspacing = spacing*0.8
+    nspacing = spacing
     for i in range(npoints-1):
         dists1[i+1] = dists1[i] + ((xpos1[i] - xpos1[i+1])**2 + (ypos1[i] - ypos1[i+1])**2 + (zpos1[i] - zpos1[i+1])**2)**0.5
         if dists1[i] >= nspacing:
@@ -324,7 +324,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
 
     penda1 = (pend1[2] - pendk1)/((pend1[0] - pendh1)**2)
     penda2 = (pend2[2] - pendk2)/((pend2[0] - pendh2)**2)
-    pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla,plb,penda1, pendh1, pendk1, penda2, pendh2, pendk2, pend1, pend2, pmid,1.4)
+    pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla,plb,penda1, pendh1, pendk1, penda2, pendh2, pendk2, pend1, pend2, pmid,1.6)
     print("pla", pla, "plb", plb)
     print("pend1", pend1)
     print("pend2", pend2)
@@ -346,7 +346,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     penda2 = (p2end2[2] - pendk2)/((p2end2[0] - pendh2)**2)
     print("p2end1", p2end1, "p2end2", p2end2)
     print("penda1", penda1, "penda2", penda2)
-    p2conx, p2cony, p2conz,p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2, pendh2, pendk2, p2end1, p2end2, pmid, 1.4)
+    p2conx, p2cony, p2conz,p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2, pendh2, pendk2, p2end1, p2end2, pmid, 1.6)
     print("p2sidex", p2sidex, "p2sidey", p2sidey, "p2sidez", p2sidez)
     print("p2conx", p2conx, "p2cony", p2cony, "p2conz", p2conz)
     pconnections1 = []
@@ -375,7 +375,11 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
             #cside += 1
         #pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
 
-    
+    unitcellnew = np.copy(unitcell) 
+    #switch order for s=1 and s = 3
+    #for i in range(9):
+    #   unitcellnew[9+i,:] = list(unitcell[17-i,:])
+    #   unitcellnew[27+i,:] = list(unitcell[35-i,:])
 
     count = 1
     zcount = 0
@@ -384,11 +388,12 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         if i%2 == 0:
             Rylist = list(range(Ry))
         else:
-            Rylist = list(range(Ry-1, -1, -1))
+            #Rylist = list(range(Ry-1, -1, -1))
+            Rylist = list(range(Ry))
         for j in Rylist:
             basey = j*b*2
             for s in range(4):
-                if (zcount == 0):
+                if (s%2 == 0):
                     Rzlist = list(range(Rz))
                     zcount = zcount + 1
                 else:
@@ -399,12 +404,12 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                     for ci in range(9):
                         mol = ci//9 + 1
                         #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)*a
-                        x = basex + unitcell[s*9 + ci,0]*a 
+                        x = basex + unitcellnew[s*9 + ci,0]*a 
                         #print("x", x,"basex", basex, "symmetries[s][0]*a", symmetries[s][0]*a, "symmetries[s][0]", symmetries[s][0])
-                        y = basey + unitcell[s*9 + ci,1]*b
+                        y = basey + unitcellnew[s*9 + ci,1]*b
                         #print("y", y, "basey", basey, "symmetries[s][1]*b", symmetries[s][1]*b, "symmetries[s][1]", symmetries[s][1])
                         #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
-                        z = basez + unitcell[s*9 + ci,2]*c
+                        z = basez + unitcellnew[s*9 + ci,2]*c
                         tx = x + z*xoffset
                         ty = y
                         tz = z*zoffset
@@ -919,7 +924,7 @@ def checkDistances(atomsinfo):
 
 
 def checkNumberofPosBondsandAdd(atomsinfo):
-    threshold = 1.95
+    threshold = 1.9
     N = len(atomsinfo)
     print("natoms", N)
     nbonds = 0
