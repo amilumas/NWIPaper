@@ -425,7 +425,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                         tz = z*zoffset
                         atomsinfo.append([count, s+1, 1, tx, ty, tz])
                         count = count + 1
-                    if k == Rzlist[-1] and s%2 == 0:
+                    if k == Rzlist[-1] and (s%2 == 0 or (reverse and s%2 ==1)):
                         if reverse:
                             for ii in range(len(vars()["connections"+str(5 - (s+1))]) - 1,-1,-1):
                                 x = basex + vars()["connections" + str(5-(s+1))][ii][0]
@@ -447,7 +447,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                                 tz = z*zoffset
                                 atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                                 count = count + 1
-                    if k == Rzlist[-1] and s%2 ==1 and (s != 3 or j < Ry-1):
+                    if k == Rzlist[-1] and (s%2 ==1 and (s != 3 or j != Rylist[-1])):
                         if reverse:
                             for ii in range(len(vars()["connections"+str(5 - (s+1))]) - 1,-1,-1):
                                 x = basex + vars()["connections" + str(5-(s+1))][ii][0]
@@ -468,7 +468,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                                 tz = z*zoffset
                                 atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                                 count = count + 1
-                    if k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==0:
+                    if k == Rzlist[-1] and (s==3 and j == Rylist[-1] and i%2 ==0):
                         
                         for ii in range(len(pconnections1)):
                             x = basex + pconnections1[ii][0]
