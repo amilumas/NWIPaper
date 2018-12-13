@@ -219,11 +219,12 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     first = unitcell[0]
     unitcell[0] = unitcell[1]
     unitcell[1] = first
+    
 
     mid = unitcell[18]
     unitcell[18] = unitcell[19]
     unitcell[19] = mid
-
+    print("unitcell", unitcell)
 
 
 
@@ -582,18 +583,23 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
             ucount += 1
     # calculate distances between ends:
     # pairs in unit cells
+    print("unitcell before", unitcell)
 
     #change unit cell order to mesh with order of beads
-    first = unitcell[0]
-    unitcell[0] = unitcell[1]
-    unitcell[1] = first
+    first = list(unitcell[0,:])
+    print("first", first)
+    print("second", unitcell[1])
+    unitcell[0,:] = list(unitcell[1])
+    unitcell[1,:] = first
     # swich another unit cell
-    switch  = unitcell[11]
-    unitcell[11] = unitcell[12]
+    switch  = list(unitcell[11])
+    unitcell[11] = list(unitcell[12])
     unitcell[12] = switch
-    mid = unitcell[18]
-    unitcell[18] = unitcell[19]
-    unitcell[19] = mid
+
+    mid = list(unitcell[18,:])
+    unitcell[18,:] = list(unitcell[19,:])
+    unitcell[19,:] = mid
+    print("unitcell", unitcell)
     ends1s = [[unitcell[8][0] * a, unitcell[8][1] * b, unitcell[8][2] * c],
               [unitcell[17][0] * a, unitcell[17][1] * b, unitcell[17][2] * c],
               [unitcell[26][0] * a, unitcell[26][1] * b, unitcell[26][2] * c],
@@ -908,7 +914,7 @@ def checkDistances(atomsinfo):
         dist9 = ((x3 - x5)**2 + (y3 - y5)**2 + (z3 - z5)**2)**0.5
         dist10 = ((x4 - x5)**2 + (y4 - y5)**2 + (z4 - z5)**2)**0.5
         threshold = 1.7
-        small = 1
+        small = 0.5
         if dist1 > threshold and dist2 > threshold and dist3 > threshold and dist4 > threshold and dist5 > threshold and dist6 > threshold and dist7 > threshold and dist8 > threshold and dist9 > threshold and dist10 > threshold:
             print("i", i, "dist1", dist1, "dist2", dist2, "atom1", i, "atom2", i+1, "atom3", i+2)
         if dist1 < small or dist2 < small or dist3 < small or dist4 < small or dist5 < small or dist6 < small or dist7 < small or dist8 < small or dist9 < small or dist10 < small:
