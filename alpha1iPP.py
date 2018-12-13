@@ -27,7 +27,7 @@ def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, m
     nspacing = spacing*0.8
     for i in range(npoints-1):
         dists1[i+1] = dists1[i] + ((xpos1[i] - xpos1[i+1])**2 + (ypos1[i] - ypos1[i+1])**2 + (zpos1[i] - zpos1[i+1])**2)**0.5
-        if dists1[i] > nspacing:
+        if dists1[i] >= nspacing:
             conx.append(xpos1[i+1])
             cony.append(ypos1[i+1])
             conz.append(zpos1[i+1])
@@ -52,7 +52,7 @@ def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, m
     for i in range(npoints-1):
         dists2[i+1] = dists2[i] + ((xpos2[i] - xpos2[i+1])**2 + (ypos2[i] - ypos2[i+1])**2 + (zpos2[i] - zpos2[i+1])**2)**0.5
         distend = ((xpos2[i+1] - end[0])**2 + (ypos2[i+1] - end[1])**2 + (zpos2[i+1] - end[2])**2)**2
-        if dists2[i] > nspacing and distend > spacing:
+        if dists2[i] >= nspacing and distend > spacing - 0.1:
             conx.append(xpos2[i+1])
             cony.append(ypos2[i+1])
             conz.append(zpos2[i+1])
@@ -126,7 +126,7 @@ def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,sp
     for i in range(npoints-1):
         dists2[i+1] = dists2[i] + ((xpos2[i] - xpos2[i+1])**2 + (ypos2[i] - ypos2[i+1])**2 + (zpos2[i] - zpos2[i+1])**2)**0.5
         distend = ((xpos2[i+1] - end[0])**2 + (ypos2[i+1] - end[1])**2 + (zpos2[i+1] - end[2])**2)*2
-        if dists2[i] > nspacing and distend > spacing:
+        if dists2[i] > nspacing and distend > spacing-0.1:
             conx.append(xpos2[i+1])
             cony.append(ypos2[i+1])
             conz.append(zpos2[i+1])
@@ -216,21 +216,21 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #pairs in unit cells
     
     #change unit cell order to mesh with order of beads
-    first = unitcell[0]
-    unitcell[0] = unitcell[1]
+    first = list(unitcell[0])
+    unitcell[0] = list(unitcell[1])
     unitcell[1] = first
     
 
-    mid = unitcell[18]
-    unitcell[18] = unitcell[19]
+    mid = list(unitcell[18])
+    unitcell[18] = list(unitcell[19])
     unitcell[19] = mid
     print("unitcell", unitcell)
 
 
 
 
-    ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
-    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b, unitcell[10][2]*c], [unitcell[19][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b, unitcell[28][2]*c], [unitcell[1,0]*a, (unitcell[1,1]+2)*b, unitcell[1,2]*c]]
+    ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c+0.5], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
+    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.6, unitcell[10][2]*c+0.2], [unitcell[19][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+0.6, unitcell[28][2]*c+0.2], [unitcell[0,0]*a, (unitcell[0,1]+2)*b, unitcell[0,2]*c]]
     midpoints = []
     for i in range(len(ends1s)):
         #print("end1", ends1s[i], "end2", ends2s[i])
@@ -293,7 +293,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     connections3 = []
     connections4 = []
     npoints = [8,6,8,6]
-    spacing = [1.54,1.54,1.54,1.54]
+    spacing = [1.54, 1.54, 1.54, 1.54, 1.6]
     
     for i in range(4):
         conx, cony, conz, sidex, sidey, sidez = linear2parabolaConnect(Aline[i], Bline[i], Aparabola1[i], Hparabola1[i], Kparabola1[i], Aparabola2[i], Hparabola2[i], Kparabola2[i], ends1s[i], ends2s[i], midpoints[i], spacing[i])
@@ -312,7 +312,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
 
     #planes connection
     
-    pend1 = ends1s[3]
+    pend1 = list(ends1s[3])
     pend2 = [ends1s[3][0]+2*a, ends1s[3][1], ends1s[3][2]]
     pla = (pend2[1] - pend1[1])/(pend2[0] - pend1[0])
     plb = pend2[1] - pla*pend2[0] 
@@ -324,7 +324,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
 
     penda1 = (pend1[2] - pendk1)/((pend1[0] - pendh1)**2)
     penda2 = (pend2[2] - pendk2)/((pend2[0] - pendh2)**2)
-    pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla,plb,penda1, pendh1, pendk1, penda2, pendh2, pendk2, pend1, pend2, pmid,1.54)
+    pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla,plb,penda1, pendh1, pendk1, penda2, pendh2, pendk2, pend1, pend2, pmid,1.4)
     print("pla", pla, "plb", plb)
     print("pend1", pend1)
     print("pend2", pend2)
@@ -332,8 +332,8 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     print("penda1", penda1, "penda2", penda2)
 
 
-    p2end1 = [unitcell[1][0]*a , unitcell[1][1]*b, unitcell[1][2]*c]
-    p2end2 = [unitcell[1][0]*a + 2*a, p2end1[1], p2end1[2]]
+    p2end1 = [unitcell[0][0]*a , unitcell[0][1]*b, unitcell[0][2]*c]
+    p2end2 = [unitcell[0][0]*a + 2*a, p2end1[1], p2end1[2]]
     pla = (p2end2[1] - p2end1[1])/(p2end2[0] - p2end1[0])
     plb = p2end2[1] - pla*p2end2[0]
     pmid = [(p2end1[0] + p2end2[0])/2, (p2end1[1] + p2end2[1])/2, (p2end1[2] + p2end2[2])/2 - c]
@@ -346,7 +346,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     penda2 = (p2end2[2] - pendk2)/((p2end2[0] - pendh2)**2)
     print("p2end1", p2end1, "p2end2", p2end2)
     print("penda1", penda1, "penda2", penda2)
-    p2conx, p2cony, p2conz,p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2, pendh2, pendk2, p2end1, p2end2, pmid, 1.6)
+    p2conx, p2cony, p2conz,p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2, pendh2, pendk2, p2end1, p2end2, pmid, 1.4)
     print("p2sidex", p2sidex, "p2sidey", p2sidey, "p2sidez", p2sidez)
     print("p2conx", p2conx, "p2cony", p2cony, "p2conz", p2conz)
     pconnections1 = []
@@ -378,15 +378,22 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     
 
     count = 1
+    zcount = 0
     for i in range(Rx):
         basex = i*a*2
-        for j in range(Ry):
+        if i%2 == 0:
+            Rylist = list(range(Ry))
+        else:
+            Rylist = list(range(Ry-1, -1, -1))
+        for j in Rylist:
             basey = j*b*2
             for s in range(4):
-                if s%2 == 0:
+                if (zcount == 0):
                     Rzlist = list(range(Rz))
+                    zcount = zcount + 1
                 else:
                     Rzlist = list(range(Rz-1, -1,-1))
+                    zcount = zcount + 1
                 for k in Rzlist:
                     basez = k*c
                     for ci in range(9):
@@ -411,7 +418,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                             tx = x + z*xoffset
                             ty = y 
                             tz = z*zoffset
-                            atomsinfo.append([count, 5+s, 2+s, tx, ty, tz])
+                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                             count = count + 1
                     if k == Rzlist[-1] and s%2 ==1 and (s != 3 or j < Ry-1):
                         for ii in range(len(vars()["connections"+str(s+1)])):
@@ -421,9 +428,9 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                             tx = x + z*xoffset
                             ty = y
                             tz = z*zoffset
-                            atomsinfo.append([count, 5+s, 2+s, tx, ty, tz])
+                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                             count = count + 1
-                    if k == Rzlist[-1] and s==3 and j == Ry-1 and i%2 ==0:
+                    if k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==0:
                         for ii in range(len(pconnections1)):
                             x = basex + pconnections1[ii][0]
                             y = basey + pconnections1[ii][1]
@@ -432,10 +439,10 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                             ty = y
                             tz = z*zoffset
 
-                            atomsinfo.append([count, 5+s, 2+s, tx, ty, tz])
+                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                             count = count + 1
 
-                    elif k == Rzlist[-1] and s==3 and j == Ry -1 and i%2 ==1:
+                    elif k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==1:
 
                         for ii in range(len(pconnections2)):
                             x = basex  + pconnections2[ii][0]
@@ -444,7 +451,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                             tx = x + z*xoffset
                             ty = y
                             tz = z*zoffset
-                            atomsinfo.append([count, 5+s, 2+s, tx, ty, tz])
+                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                             count = count + 1
                     
 
@@ -912,7 +919,7 @@ def checkDistances(atomsinfo):
 
 
 def checkNumberofPosBondsandAdd(atomsinfo):
-    threshold = 1.7
+    threshold = 1.95
     N = len(atomsinfo)
     print("natoms", N)
     nbonds = 0
@@ -949,16 +956,16 @@ def checkNumberofPosBondsandAdd(atomsinfo):
 
 
 def main():
-    p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
-    print("p613MolList",p613MolList)
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
+    #p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
+    #print("p613MolList",p613MolList)
+    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [50000*3 + 2], 20, 20, 20)
     #msc.writelammpsdatajustatoms("MolinCryst.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
-    checkDistances(atomsinfo)
-    msc.writelammpsdatajustatoms("p613MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
-    bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
-    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCryst.data")
-    msc.writelammpsdataonebondtype("p613MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    #checkDistances(atomsinfo)
+    #msc.writelammpsdatajustatoms("p613MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    #bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
+    #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCryst.data")
+    #msc.writelammpsdataonebondtype("p613MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     
     #readlammpsbondsPPctypes("p613MolinCrystbonds.data", "p613MolinCrystCtype.data")
     #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCrystCtypebonds.data")
@@ -983,9 +990,12 @@ def main():
     #msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     #readlammpsbondsPPctypes("MolinCrystbonds.data", "MolinCrystCtype.data")
     #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPC1type.data")
-    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 20, 20, 20)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 5, 5, 5)
     
-    #msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
+    msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
+    bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
+    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("TrialInfa1iPP.data")
+    msc.writelammpsdataonebondtype("TrialInfa1iPPCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     #checkDistances(atomsinfo)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = readxyz("custompp-iso.xyz")
     #msc.writelammpsdatajustatoms("custompp-iso.data", [xlo, xhi, ylo, yhi, zlo, zhi], [14, 1], len(atomsinfo), atomsinfo)
