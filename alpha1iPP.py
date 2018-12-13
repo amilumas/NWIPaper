@@ -386,12 +386,15 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
 
     count = 1
     zcount = 0
+    reverse = False
     for i in range(Rx):
         basex = i*a*2
         if i%2 == 0:
             unitcellnew = np.copy(unitcell)
+            reverse = False
         else:
             unitcellnew = np.copy(unitcellReverse)
+            reverse = True
         if i%2 == 0:
             Rylist = list(range(Ry))
         else:
@@ -423,26 +426,50 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                         atomsinfo.append([count, s+1, 1, tx, ty, tz])
                         count = count + 1
                     if k == Rzlist[-1] and s%2 == 0:
-                        for ii in range(len(vars()["connections"+str(s+1)])):
-                            x = basex + vars()["connections" + str(s+1)][ii][0]
-                            y = basey + vars()["connections" + str(s+1)][ii][1]
-                            z = basez + vars()["connections" + str(s+1)][ii][2]
-                            tx = x + z*xoffset
-                            ty = y 
-                            tz = z*zoffset
-                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
-                            count = count + 1
+                        if reverse:
+                            for ii in range(len(vars()["connections"+str(5 - (s+1))]) - 1,-1,-1):
+                                x = basex + vars()["connections" + str(5-(s+1))][ii][0]
+                                y = basey + vars()["connections" + str(5-(s+1))][ii][1]
+                                z = basez + vars()["connections" + str(5-(s+1))][ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                atomsinfo.append([count,5+s, 1, tx, ty, tz])
+                                count = count + 1
+                             
+                        else:
+                            for ii in range(len(vars()["connections"+str(s+1)])):
+                                x = basex + vars()["connections" + str(s+1)][ii][0]
+                                y = basey + vars()["connections" + str(s+1)][ii][1]
+                                z = basez + vars()["connections" + str(s+1)][ii][2]
+                                tx = x + z*xoffset
+                                ty = y 
+                                tz = z*zoffset
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
+                                count = count + 1
                     if k == Rzlist[-1] and s%2 ==1 and (s != 3 or j < Ry-1):
-                        for ii in range(len(vars()["connections"+str(s+1)])):
-                            x = basex + vars()["connections" + str(s+1)][ii][0]
-                            y = basey + vars()["connections" + str(s+1)][ii][1]
-                            z = vars()["connections" + str(s+1)][ii][2]
-                            tx = x + z*xoffset
-                            ty = y
-                            tz = z*zoffset
-                            atomsinfo.append([count, 5+s, 1, tx, ty, tz])
-                            count = count + 1
+                        if reverse:
+                            for ii in range(len(vars()["connections"+str(5 - (s+1))]) - 1,-1,-1):
+                                x = basex + vars()["connections" + str(5-(s+1))][ii][0]
+                                y = basey + vars()["connections" + str(5-(s+1))][ii][1]
+                                z = basez + vars()["connections" + str(5-(s+1))][ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                atomsinfo.append([count,5+s, 1, tx, ty, tz])
+                                count = count + 1
+                        else:
+                            for ii in range(len(vars()["connections"+str(s+1)])):
+                                x = basex + vars()["connections" + str(s+1)][ii][0]
+                                y = basey + vars()["connections" + str(s+1)][ii][1]
+                                z = vars()["connections" + str(s+1)][ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
+                                count = count + 1
                     if k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==0:
+                        
                         for ii in range(len(pconnections1)):
                             x = basex + pconnections1[ii][0]
                             y = basey + pconnections1[ii][1]
