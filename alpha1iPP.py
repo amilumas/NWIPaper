@@ -380,14 +380,8 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     unitcellReverse = np.copy(unitcell)
     for i in range(36):
         unitcellReverse[i,:] = list(unitcell[35-i,:])
-    #reverse first nine order
-    oldunitCellR = np.copy(unitcellReverse)
-    #for i in range(9):
-    #    unitcellReverse[i,:] = list(oldunitCellR[8-i,:])
+  
     count = 1
-    zcount = 0
-    reverse = False
-    srlist = [3, 2, 1, 0]
     srclist = [2, 1, 0, 3]
     for i in range(Rx):
         basex = i*a*2
@@ -405,10 +399,10 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
             for s in range(4):
                 if (s%2 == 0):
                     Rzlist = list(range(Rz))
-                    zcount = zcount + 1
+                    
                 else:
                     Rzlist = list(range(Rz-1, -1,-1))
-                    zcount = zcount + 1
+                    
                 for k in Rzlist:
                     basez = k*c
                     
@@ -674,14 +668,8 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     unitcell[18,:] = list(unitcell[19,:])
     unitcell[19,:] = mid
     print("unitcell", unitcell)
-    ends1s = [[unitcell[8][0] * a, unitcell[8][1] * b, unitcell[8][2] * c],
-              [unitcell[17][0] * a, unitcell[17][1] * b, unitcell[17][2] * c],
-              [unitcell[26][0] * a, unitcell[26][1] * b, unitcell[26][2] * c],
-              [unitcell[35][0] * a, unitcell[35][1] * b, unitcell[35][2] * c]]
-    ends2s = [[unitcell[10][0] * a, unitcell[10][1] * b, unitcell[10][2] * c],
-              [unitcell[18][0], unitcell[18][1] * b, unitcell[18][2] * c],
-              [unitcell[28][0] * a, unitcell[28][1] * b, unitcell[28][2] * c],
-              [unitcell[1, 0] * a, (unitcell[1, 1] + 2) * b, unitcell[1, 2] * c]]
+    ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c+0.5], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
+    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.6, unitcell[10][2]*c+0.2], [unitcell[19][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+0.6, unitcell[28][2]*c+0.2], [unitcell[0,0]*a, (unitcell[0,1]+2)*b, unitcell[0,2]*c]]
     midpoints = []
     for i in range(len(ends1s)):
         # print("end1", ends1s[i], "end2", ends2s[i])
@@ -748,8 +736,8 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
 
             #vars()["connections" + str(i+1)].append([conx[j], cony[j], conz[j]])
 
-    pend1 = ends1s[3]
-    pend2 = [ends1s[3][0] + 2 * a, ends1s[3][1], ends1s[3][2]]
+    pend1 = list(ends1s[3])
+    pend2 = [ends1s[3][0]+2*a, ends1s[3][1], ends1s[3][2]]
     pla = (pend2[1] - pend1[1]) / (pend2[0] - pend1[0])
     plb = pend2[1] - pla * pend2[0]
     pmid = [(pend1[0] + pend2[0]) / 2, (pend1[1] + pend2[1]) / 2, (pend1[2] + pend2[2]) / 2 - c]
@@ -813,110 +801,207 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     spacecount = minspace
     alldone = False
     nc = 0
+    unitcellnew = np.copy(unitcell) 
+    #Reverse
+    unitcellReverse = np.copy(unitcell)
+    for i in range(36):
+        unitcellReverse[i,:] = list(unitcell[35-i,:])
+    srclist = [2, 1, 0, 3]
     for i in range(Rx):
-        basex = i * a * 2
-        for j in range(Ry):
-            basey = j * b * 2
+        basex = i*a*2
+        if i%2 == 0:
+            Rylist = list(range(Ry))
+            reverse = False
+            unitcellnew = np.copy(unitcell)
+        else:
+            Rylist = list(range(Ry-1, -1, -1))
+            reverse = True
+            unitcellnew = np.copy(unitcellReverse)
+            #Rylist = list(range(Ry))
+        for j in Rylist:
+            basey = j*b*2
             for s in range(4):
-                if s % 2 == 0:
+                if (s%2 == 0):
                     Rzlist = list(range(Rz))
+                    
                 else:
-                    Rzlist = list(range(Rz - 1, -1, -1))
+                    Rzlist = list(range(Rz-1, -1,-1))
+                    
                 for k in Rzlist:
-                    basez = k * c
+                    basez = k*c
+                    
+                    
                     for ci in range(9):
-                        x = basex + unitcell[s * 9 + ci, 0] * a
-                        y = basey + unitcell[s * 9 + ci, 1] * b
-                        z = basez + unitcell[s * 9 + ci, 2] * c
-                        tx = x + z * xoffset
-                        ty = y
-                        tz = z * zoffset
-                        if not alldone and madded < moleculeClist[moli] and spacecount >= minspace: 
-                            atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
-                            acount = acount + 1
-                            madded  = madded + 1
-                            #print("spacecount", spacecount)
-                        elif (madded == 0 and spacecount < minspace):
-                            if spacecount == 0:
-                                if ci > 0:
+                            
+                            #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)*a
+                            x = basex + unitcellnew[s*9 + ci,0]*a 
+                            #print("x", x,"basex", basex, "symmetries[s][0]*a", symmetries[s][0]*a, "symmetries[s][0]", symmetries[s][0])
+                            y = basey + unitcellnew[s*9 + ci,1]*b
+                            #print("y", y, "basey", basey, "symmetries[s][1]*b", symmetries[s][1]*b, "symmetries[s][1]", symmetries[s][1])
+                            #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
+                            z = basez + unitcellnew[s*9 + ci,2]*c
+                            tx = x + z*xoffset
+                            ty = y
+                            tz = z*zoffset
+                            if not alldone and madded < moleculeClist[moli] and spacecount >= minspace: 
+                                atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                acount = acount + 1
+                                madded  = madded + 1
+                                #print("spacecount", spacecount)
+                            elif (madded == 0 and spacecount < minspace):
+                                if spacecount == 0:
+                                    if ci > 0:
+                                        spacecount = spacecount + 1
+                                else:
                                     spacecount = spacecount + 1
-                            else:
-                                spacecount = spacecount + 1
-                            #print("tx", tx, "ty", ty, "tz", tz)
+                                #print("tx", tx, "ty", ty, "tz", tz)
+                            if not alldone and madded == moleculeClist[moli]:
+                                moli = moli + 1
+                                madded = 0
+                                spacecount = 0
+                                if moli == len(moleculeClist):
+                                    alldone = True
+                                #minspace = 5 +nc%2
+                                minspace = 5 
+                                #print("minspace", minspace)
+                            count = count + 1
+                            
+
+                    if reverse == False:
+                        if k == Rzlist[-1] and s % 2 == 0:
+                            nc = nc +1
+                            for ii in range(len(vars()["connections" + str(s + 1)])):
+                                x = basex + vars()["connections" + str(s + 1)][ii][0]
+                                y = basey + vars()["connections" + str(s + 1)][ii][1]
+                                z = basez + vars()["connections" + str(s + 1)][ii][2]
+                                tx = x + z * xoffset
+                                ty = y
+                                tz = z * zoffset
+                                if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    acount = acount + 1
+                                    madded = madded +1
+                                count = count + 1
+                        elif k == Rzlist[-1] and s % 2 == 1 and (s != 3 or j < Ry - 1):
+                            for ii in range(len(vars()["connections" + str(s + 1)])):
+                                x = basex + vars()["connections" + str(s + 1)][ii][0]
+                                y = basey + vars()["connections" + str(s + 1)][ii][1]
+                                z = vars()["connections" + str(s + 1)][ii][2]
+                                tx = x + z * xoffset
+                                ty = y
+                                tz = z * zoffset
+                                if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    atomsinfo.append([acount,moli+1, 1, tx, ty, tz])
+                                    acount = acount + 1
+                                    madded = madded + 1
+                                count = count + 1
+                        elif k == Rzlist[-1] and s == 3 and j == Ry - 1 and i % 2 == 0:
+                            nc = nc +1
+                            for ii in range(len(pconnections1)):
+                                x = basex + pconnections1[ii][0]
+                                y = basey + pconnections1[ii][1]
+                                z = pconnections1[ii][2]
+                                tx = x + z * xoffset
+                                ty = y
+                                tz = z * zoffset
+                                if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    acount = acount + 1
+                                    madded = madded + 1
+                                count = count + 1
+
+                        elif k == Rzlist[-1] and s == 3 and j == Ry - 1 and i % 2 == 1:
+
+                            for ii in range(len(pconnections2)):
+                                x = basex + pconnections2[ii][0]
+                                y = pconnections2[ii][1]
+                                z = pconnections2[ii][2]
+                                tx = x + z * xoffset
+                                ty = y
+                                tz = z * zoffset
+                                if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    acount = acount + 1
+                                    madded = madded + 1
+                                count = count + 1
                         if not alldone and madded == moleculeClist[moli]:
-                            moli = moli + 1
                             madded = 0
-                            spacecount = 0
+
+                            moli = moli + 1
                             if moli == len(moleculeClist):
                                 alldone = True
-                            #minspace = 5 +nc%2
-                            minspace = 5 
-                            #print("minspace", minspace)
-                        count = count + 1
-                    if k == Rzlist[-1] and s % 2 == 0:
-                        nc = nc +1
-                        for ii in range(len(vars()["connections" + str(s + 1)])):
-                            x = basex + vars()["connections" + str(s + 1)][ii][0]
-                            y = basey + vars()["connections" + str(s + 1)][ii][1]
-                            z = basez + vars()["connections" + str(s + 1)][ii][2]
-                            tx = x + z * xoffset
-                            ty = y
-                            tz = z * zoffset
-                            if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
-                                acount = acount + 1
-                                madded = madded +1
-                            count = count + 1
-                    elif k == Rzlist[-1] and s % 2 == 1 and (s != 3 or j < Ry - 1):
-                        for ii in range(len(vars()["connections" + str(s + 1)])):
-                            x = basex + vars()["connections" + str(s + 1)][ii][0]
-                            y = basey + vars()["connections" + str(s + 1)][ii][1]
-                            z = vars()["connections" + str(s + 1)][ii][2]
-                            tx = x + z * xoffset
-                            ty = y
-                            tz = z * zoffset
-                            if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                atomsinfo.append([acount,moli+1, 1, tx, ty, tz])
-                                acount = acount + 1
-                                madded = madded + 1
-                            count = count + 1
-                    elif k == Rzlist[-1] and s == 3 and j == Ry - 1 and i % 2 == 0:
-                        nc = nc +1
-                        for ii in range(len(pconnections1)):
-                            x = basex + pconnections1[ii][0]
-                            y = basey + pconnections1[ii][1]
-                            z = pconnections1[ii][2]
-                            tx = x + z * xoffset
-                            ty = y
-                            tz = z * zoffset
-                            if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
-                                acount = acount + 1
-                                madded = madded + 1
-                            count = count + 1
+                            #print("mol", mol)
+                        #print("acount", acount)
+                    
+                    else: 
+                        sr = srclist[s]
+                        #print("sr", sr)
+                        if k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==0:
+                            for ii in range(len(pconnections1)):
+                                x = basex + pconnections1[ii][0]
+                                y = basey + pconnections1[ii][1]
+                                z = pconnections1[ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    acount = acount + 1
+                                    madded = madded + 1
+                                count = count + 1
 
-                    elif k == Rzlist[-1] and s == 3 and j == Ry - 1 and i % 2 == 1:
+                        elif k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==1:
 
-                        for ii in range(len(pconnections2)):
-                            x = basex + pconnections2[ii][0]
-                            y = pconnections2[ii][1]
-                            z = pconnections2[ii][2]
-                            tx = x + z * xoffset
-                            ty = y
-                            tz = z * zoffset
-                            if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
-                                acount = acount + 1
-                                madded = madded + 1
-                            count = count + 1
-                    if not alldone and madded == moleculeClist[moli]:
-                        madded = 0
+                            for ii in range(len(pconnections2)):
+                                x = basex  + pconnections2[ii][0]
+                                y = pconnections2[ii][1]
+                                z = pconnections2[ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    acount = acount + 1
+                                    madded = madded + 1
+                                count = count + 1
+                        elif k == Rzlist[-1] and sr%2 == 0:
+                            for ii in range(len(vars()["connections"+str(sr+1)])-1, -1, -1):
+                                x = basex + vars()["connections" + str(sr+1)][ii][0]
+                                y = basey + vars()["connections" + str(sr+1)][ii][1]
+                                z = basez + vars()["connections" + str(sr+1)][ii][2]
+                                tx = x + z*xoffset
+                                ty = y 
+                                tz = z*zoffset
+                                if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    acount = acount + 1
+                                    madded = madded + 1
+                                count = count + 1
+                        elif k == Rzlist[-1] and sr%2 ==1 and (sr != 3 or j != Rylist[0]):
+                            
+                            for ii in range(len(vars()["connections"+str(sr+1)])-1, -1, -1):
+                                if sr != 3:
+                                    x = basex + vars()["connections" + str(sr+1)][ii][0]
+                                    y = basey + vars()["connections" + str(sr+1)][ii][1]
+                                    z = vars()["connections" + str(sr+1)][ii][2]
+                                elif sr == 3:
+                                    x = basex + vars()["connections" + str(sr+1)][ii][0]
+                                    y = basey + vars()["connections" + str(sr+1)][ii][1] - 2*b
+                                    z = vars()["connections" + str(sr+1)][ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    acount = acount + 1
+                                    madded = madded + 1
+                                count = count + 1
+                        if not alldone and madded == moleculeClist[moli]:
+                            madded = 0
 
-                        moli = moli + 1
-                        if moli == len(moleculeClist):
-                            alldone = True
-                        #print("mol", mol)
-                    #print("acount", acount)
+                            moli = moli + 1
+                            if moli == len(moleculeClist):
+                                alldone = True
 
     if count < len(countRef) or acount != nBeads+1:
         print("ERROR: NOT ALL WERE SHOWN")
@@ -1026,13 +1111,13 @@ def main():
     #p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
     #print("p613MolList",p613MolList)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
-    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [50000*3 + 2], 20, 20, 20)
-    #msc.writelammpsdatajustatoms("MolinCryst.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [2000*3 + 2], 10, 10, 10)
+    msc.writelammpsdatajustatoms("MolinCryst.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     #checkDistances(atomsinfo)
     #msc.writelammpsdatajustatoms("p613MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
-    #bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
-    #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCryst.data")
-    #msc.writelammpsdataonebondtype("p613MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
+    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("MolinCryst.data")
+    msc.writelammpsdataonebondtype("MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     
     #readlammpsbondsPPctypes("p613MolinCrystbonds.data", "p613MolinCrystCtype.data")
     #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCrystCtypebonds.data")
@@ -1057,12 +1142,12 @@ def main():
     #msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     #readlammpsbondsPPctypes("MolinCrystbonds.data", "MolinCrystCtype.data")
     #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPC1type.data")
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 5, 2, 2)
+    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 5, 2, 2)
     
-    msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
-    bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
-    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("TrialInfa1iPP.data")
-    msc.writelammpsdataonebondtype("TrialInfa1iPPCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    #msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
+    #bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
+    #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("TrialInfa1iPP.data")
+    #msc.writelammpsdataonebondtype("TrialInfa1iPPCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     #checkDistances(atomsinfo)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = readxyz("custompp-iso.xyz")
     #msc.writelammpsdatajustatoms("custompp-iso.data", [xlo, xhi, ylo, yhi, zlo, zhi], [14, 1], len(atomsinfo), atomsinfo)
