@@ -588,12 +588,12 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     unitcell[0] = unitcell[1]
     unitcell[1] = first
     # swich another unit cell
-    switch  = unitcell[11]
-    unitcell[11] = unitcell[12]
-    unitcell[12] = switch
-    mid = unitcell[18]
-    unitcell[18] = unitcell[19]
-    unitcell[19] = mid
+    #switch  = unitcell[11]
+    #unitcell[11] = unitcell[12]
+    #unitcell[12] = switch
+    #mid = unitcell[18]
+    #unitcell[18] = unitcell[19]
+    #unitcell[19] = mid
     ends1s = [[unitcell[8][0] * a, unitcell[8][1] * b, unitcell[8][2] * c],
               [unitcell[17][0] * a, unitcell[17][1] * b, unitcell[17][2] * c],
               [unitcell[26][0] * a, unitcell[26][1] * b, unitcell[26][2] * c],
@@ -951,11 +951,13 @@ def checkNumberofPosBondsandAdd(atomsinfo):
 def main():
     #p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
     #print("p613MolList",p613MolList)
+    #print("nbonds Estimated", sum(p613MolList) - len(p613MolList))
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [50000*3 + 2], 20, 20, 20)
     #msc.writelammpsdatajustatoms("MolinCryst.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     #checkDistancesBefore(atomsinfo)
     #msc.writelammpsdatajustatoms("p613MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    #checkDistances(atomsinfo) 
     #bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
     #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCryst.data")
     #msc.writelammpsdataonebondtype("p613MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
