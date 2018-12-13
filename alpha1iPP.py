@@ -888,35 +888,23 @@ def checkDistancesBefore(atomsinfo):
 def checkDistances(atomsinfo):
     N = len(atomsinfo)
     nbonds = 0
-    for i in range(0,N-2):
-        
-        x1 = atomsinfo[i][3]
-        y1 = atomsinfo[i][4]
-        z1 = atomsinfo[i][5]
-        x2 = atomsinfo[i+1][3]
-        y2 = atomsinfo[i+1][4]
-        z2 = atomsinfo[i+1][5]
-        x3 = atomsinfo[i+2][3]
-        y3 = atomsinfo[i+2][4]
-        z3 = atomsinfo[i+2][5]
+    for i in range(0,N):
+        for j in range(i+1, min(i+5,N)):
+            x1 = atomsinfo[i][3]
+            y1 = atomsinfo[i][4]
+            z1 = atomsinfo[i][5]
+            x2 = atomsinfo[j][3]
+            y2 = atomsinfo[j][4]
+            z2 = atomsinfo[j][5]
 
-        dist1 = ((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**0.5
-        dist2 = ((x2 - x3)**2 + (y2 - y3)**2 + (z2 - z3)**2)**0.5
-        dist3 = ((x1 - x3)**2 + (y1 - y3)**2 + (z1 - z3)**2)**0.5
-        threshold = 1.7
-        small = 1
-        #if dist1 > threshold and dist2 > threshold and dist3 > threshold and dist4 > threshold and dist5 > threshold and dist6 > threshold and dist7 > threshold and dist8 > threshold and dist9 > threshold and dist10 > threshold:
-            #print("i", i, "dist1", dist1, "dist2", dist2, "atom1", i, "atom2", i+1, "atom3", i+2)
-        #if dist1 < small or dist2 < small or dist3 < small or dist4 < small or dist5 < small or dist6 < small or dist7 < small or dist8 < small or dist9 < small or dist10 < small:
-            #print("i", i, "too close","atom1", i, "atom2", i+1, "atom3", i+2)
-        if dist1 > threshold and dist2 > threshold and dist3 > threshold:
-            print("too far", "i", i)
-        for ii in range(3):
-            if vars()["dist" + str(ii+1)] > small and vars()["dist" + str(ii+1)] < threshold:
+            dist = ((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**0.5
+            threshold = 1.7
+            small = 1
+            if dist < threshold:
                 nbonds = nbonds + 1
                 #print("nbonds", nbonds, "dist", vars()["dist" + str(ii+1)])
-            if vars()["dist"+str(ii+1)] < small:
-                print("too close", "i", i, "ii", ii, "dist", vars()["dist"+str(ii+1)])
+            if dist < small:
+                print("too close", "i", i, "j", j, "dist", dist)
             
             
     print("nbonds", nbonds)
