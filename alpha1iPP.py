@@ -375,11 +375,16 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
             #cside += 1
         #pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
 
-    unitcellnew = np.copy(unitcell) 
+    #unitcellnew = np.copy(unitcell) 
     #switch order for s=1 and s = 3
     #for i in range(9):
     #   unitcellnew[9+i,:] = list(unitcell[17-i,:])
     #   unitcellnew[27+i,:] = list(unitcell[35-i,:])
+    unitcellReverse = np.copy(unitcell)
+    #1 3 2 4
+    #for i in range(9):
+        #unitcellReverse[9+i,:] = list(unitcell[17-i,:])
+        #unitcellReverse[18+i,:] = list(unitcell[26-i,:])
 
     count = 1
     zcount = 0
@@ -387,13 +392,17 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         basex = i*a*2
         if i%2 == 0:
             Rylist = list(range(Ry))
+            unitcellnew = np.copy(unitcell)
         else:
             #Rylist = list(range(Ry-1, -1, -1))
             Rylist = list(range(Ry))
+            #unitcellnew = np.copy(unitcellReverse)
+        print("Rylist", Rylist)
         for j in Rylist:
             basey = j*b*2
+            print("basey", basey)
             for s in range(4):
-                if (s%2 == 0):
+                if (s%2):
                     Rzlist = list(range(Rz))
                     zcount = zcount + 1
                 else:
@@ -995,7 +1004,7 @@ def main():
     #msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     #readlammpsbondsPPctypes("MolinCrystbonds.data", "MolinCrystCtype.data")
     #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPC1type.data")
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 5, 5, 5)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 5, 2, 2)
     
     msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
