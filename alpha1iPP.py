@@ -561,6 +561,7 @@ def readlammpsbondsPPctypes(filename,newfile):
 
     #write new lammps data with just atoms 
     msc.writelammpsdatajustatoms(newfile, boxcoords, Cmasstypes, len(atomsinfo), atomsinfo)
+    return atomsinfo
     
 
 def readxyz(filename):
@@ -807,6 +808,52 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     started = True
     for i in range(36):
         unitcellReverse[i,:] = list(unitcell[35-i,:])
+    """
+    switch1 = [2, 5, 10, 13, 19, 21, 27, 31]
+    switch2 = [3, 6, 11, 14, 20, 22, 28, 33]
+    
+    for i,x in enumerate(switch1):
+        x2  = switch2[i]
+        tmpU = list(unitcell[x2])
+        
+        unitcell[x2] = list(unitcell[x])
+        
+        unitcell[x] = tmpU
+        
+    switch1R = []
+    switch2R = []
+    for i,x in enumerate(switch1R):
+        x2 = switch2R[i]
+        tmpR = list(unitcellReverse[x2])
+        unitcellReverse[x2] = list(unitcellReverse[x])
+        unitcellReverse[x] = tmpR
+    """
+
+    print("Distances in unitcell")
+    for i in range(34):
+        x1 = unitcell[i,0]*a
+        y1 = unitcell[i,1]*b
+        z1 = unitcell[i,2]*c
+        for j in range(i+1,i+3):
+            x2 = unitcell[j,0]*a
+            y2 = unitcell[j,1]*b
+            z2 = unitcell[j,2]*c
+            dist  = ((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)**0.5
+            print("dist", dist, "i", i, "j", j)
+    print("Distances in reverse unitcell")
+    for i in range(34):
+        x1  = unitcellReverse[i,0]*a
+        y1 = unitcellReverse[i,1]*b
+        z1 = unitcellReverse[i,2]*c
+        for j in range(i+1, i+3):
+            x2 = unitcellReverse[j,0]*a
+            y2 = unitcellReverse[j,1]*b
+            z2 = unitcellReverse[j,2]*c
+            dist = ((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)**0.5
+            print("dist", dist, "i", i, "j", j)
+
+
+
     srclist = [2, 1, 0, 3]
     for i in range(Rx):
         basex = i*a*2
@@ -846,11 +893,11 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 else:
                                     if s== 0 and ci == 1:
                                         started = True
-                                    elif s == 1 and ci == 0:
+                                    elif s == 1 and ci == 1:
                                         started = True
                                     elif s == 2 and ci == 1:
                                         started = True
-                                    elif s == 3 and ci == 1:
+                                    elif s == 3 and ci == 0:
                                         started = True
 
                             
@@ -1132,27 +1179,37 @@ def checkNumberofPosBondsandAdd(atomsinfo):
 
 
 def main():
-    p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
-    print("p613MolList",p613MolList)
+    #p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
+    #print("p613MolList",p613MolList)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", p613MolList, 20, 20, 20)
-    msc.writelammpsdatajustatoms("MolinCryst.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
+    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", p613MolList, 20, 20, 20)
+    #msc.writelammpsdatajustatoms("p613MolinCryst.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     #checkDistances(atomsinfo)
     #msc.writelammpsdatajustatoms("p613MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
-    bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
-    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("MolinCryst.data")
-    msc.writelammpsdataonebondtype("MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    #bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
+    #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCryst.data")
+    #msc.writelammpsdataonebondtype("p613MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     
-    readlammpsbondsPPctypes("MolinCrystCustomBonds.data", "MolinCrystCBCtype.data")
+    #atomsinfo = readlammpsbondsPPctypes("p613MolinCrystCustomBonds.data", "p613MolinCrystCBCtype.data")
+    #msc.writelammpsdataonebondtype("p613MolinCrystCtypeCustomBonds.data", boxcoords, [15.035, 14.027, 13.019], atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCrystCtypebonds.data")
 
     #msc.writelammpsdataonebondtype("p613MolinCrystCtypebondsO.data", boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
 
 
-    #p813MolList = makeMolList([9,7,6,12,3,6,1,1,1,1,], [926,1436,1946,2456,2966,3476,3986,11126,12656,32546])
-    #print("p813MolList",p813MolList)
-    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p813MolinCryst.xyz", p813MolList, 20, 20, 20)
-    #msc.writelammpsdatajustatoms("p813MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    p813MolList = makeMolList([9,7,6,12,3,6,1,1,1,1,], [926,1436,1946,2456,2966,3476,3986,11126,12656,32546])
+    print("p813MolList",p813MolList)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p813MolinCryst.xyz", p813MolList, 20, 20, 20)
+    msc.writelammpsdatajustatoms("p813MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    checkDistances(atomsinfo)
+    bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
+    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p813MolinCryst.data")
+    msc.writelammpsdataonebondtype("p813MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    atomsinfo = readlammpsbondsPPctypes("p813MolinCrystCustomBonds.data", "p813MolinCrystCBCtype.data")
+    msc.writelammpsdataonebondtype("p813MolinCrystCtypeCustomBonds.data", boxcoords, [15.035, 14.027, 13.019], atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+
+
+
     #readlammpsbondsPPctypes("p813MolinCrystbonds.data", "p813MolinCrystCtype.data")
 
     #pMPMolList = makeMolList([3, 4, 10, 11, 8, 4, 1, 1, 1, 1, 1], [926, 1526, 2126, 2726, 3326, 3926, 4526, 6326, 6926, 8126, 54326])
