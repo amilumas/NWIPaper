@@ -850,7 +850,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                         started = True
                                     elif s == 2 and ci == 1:
                                         started = True
-                                    elif s == 3 and ci == 0:
+                                    elif s == 3 and ci == 1:
                                         started = True
 
                             
