@@ -720,16 +720,26 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     connections2 = []
     connections3 = []
     connections4 = []
+    connectionsR1 = []
+    connectionsR2 = []
+    connectionsR3 = []
+    connectionsR4 = []
     npoints = [8, 6, 8, 6]
     spacing = [1.54, 1.54, 1.54, 1.54]
     for i in range(4):
         conx, cony, conz, sidex, sidey, sidez = linear2parabolaConnect(Aline[i], Bline[i], Aparabola1[i], Hparabola1[i], Kparabola1[i], Aparabola2[i], Hparabola2[i], Kparabola2[i], ends1s[i], ends2s[i], midpoints[i], spacing[i])
         sidec = 0
+        sidecR = len(sidex) -1
         for j in range(len(conx)):
             vars()["connections" + str(i + 1)].append([conx[j], cony[j], conz[j]])
             if j % 2 == 0:
                 vars()["connections" + str(i + 1)].append([sidex[sidec], sidey[sidec], sidez[sidec]])
                 sidec += 1
+            jR = len(conx) -1 - j
+            vars()["connectionsR" + str(i+1)].append([conx[jR], cony[jR], conz[jR]])
+            if jR %2 == 0:
+                vars()["connectionsR" + str(i+1)].append([sidex[sidecR], sidey[sidecR], sidez[sidecR]])
+                sidecR = sidecR - 1
         #for j in range(len(conx)//2, len(conx)):
             #if j % 2 == 0:
                 #vars()["connections" + str(i+1)].append([sidex[sidec], sidey[sidec], sidez[sidec]])
@@ -856,6 +866,19 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     started = True
     for i in range(36):
         unitcellReverse[i,:] = list(unitcell[35-i,:])
+    sortedRInds = [0, 2, 1, 3, 5, 4, 6, 8, 7]
+    unitcellRcopy = np.copy(unitcellReverse)
+    for s in range(len(symmetries)):
+        for ci in range(len(rcoords)): 
+            unitcellReverse[s*9 + ci,:] = list(unitcellRcopy[s*9 + sortedRInds[ci],:])
+
+    """
+    for i in range(9):
+        unitcellReverse[i,:] = list(unitcell[i+27,:])
+        unitcellReverse[9+i,:] = list(unitcell[i+18,:])
+        unitcellReverse[18+i,:] = list(unitcell[i+9,:])
+        unitcellReverse[27+i,:] = list(unitcell[i,:])
+    """
     srclist = [2, 1, 0, 3]
     for i in range(Rx):
         basex = i*a*2
@@ -1038,10 +1061,10 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 count = count + 1
                         elif k == Rzlist[-1] and sr%2 == 0:
                             nc = nc + 1
-                            for ii in range(len(vars()["connections"+str(sr+1)])-1, -1, -1):
-                                x = basex + vars()["connections" + str(sr+1)][ii][0]
-                                y = basey + vars()["connections" + str(sr+1)][ii][1]
-                                z = basez + vars()["connections" + str(sr+1)][ii][2]
+                            for ii in range(len(vars()["connectionsR"+str(sr+1)])):
+                                x = basex + vars()["connectionsR" + str(sr+1)][ii][0]
+                                y = basey + vars()["connectionsR" + str(sr+1)][ii][1]
+                                z = basez + vars()["connectionsR" + str(sr+1)][ii][2]
                                 tx = x + z*xoffset
                                 ty = y 
                                 tz = z*zoffset
@@ -1052,15 +1075,15 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 count = count + 1
                         elif k == Rzlist[-1] and sr%2 ==1 and (sr != 3 or j != Rylist[-1]):
                             
-                            for ii in range(len(vars()["connections"+str(sr+1)])-1, -1, -1):
+                            for ii in range(len(vars()["connectionsR"+str(sr+1)])):
                                 if sr != 3:
-                                    x = basex + vars()["connections" + str(sr+1)][ii][0]
-                                    y = basey + vars()["connections" + str(sr+1)][ii][1]
-                                    z = vars()["connections" + str(sr+1)][ii][2]
+                                    x = basex + vars()["connectionsR" + str(sr+1)][ii][0]
+                                    y = basey + vars()["connectionsR" + str(sr+1)][ii][1]
+                                    z = vars()["connectionsR" + str(sr+1)][ii][2]
                                 elif sr == 3:
-                                    x = basex + vars()["connections" + str(sr+1)][ii][0]
-                                    y = basey + vars()["connections" + str(sr+1)][ii][1] - 2*b
-                                    z = vars()["connections" + str(sr+1)][ii][2]
+                                    x = basex + vars()["connectionsR" + str(sr+1)][ii][0]
+                                    y = basey + vars()["connectionsR" + str(sr+1)][ii][1] - 2*b
+                                    z = vars()["connectionsR" + str(sr+1)][ii][2]
                                 tx = x + z*xoffset
                                 ty = y
                                 tz = z*zoffset
@@ -1144,7 +1167,7 @@ def checkDistances(atomsinfo):
 
 
 def checkNumberofPosBondsandAdd(atomsinfo):
-    threshold = 1.9
+    threshold = 1.87
     N = len(atomsinfo)
     print("natoms", N)
     nbonds = 0
@@ -1181,7 +1204,7 @@ def checkNumberofPosBondsandAdd(atomsinfo):
 
 
 def main():
-    """
+    
     p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
     print("p613MolList",p613MolList)
     atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
@@ -1195,18 +1218,19 @@ def main():
     
     
     atomsinfo = readlammpsbondsPPctypes("p613MolinCrystCustomBonds.data", "p613MolinCrystCtype.data")
-    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCrystCustomBonds.data")
+    boxcoords, masstypes, atoms, bonds, angles, dihedrals, oldatomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCrystCustomBonds.data")
     
     msc.writelammpsdataonebondtype("p613MolinCrystCtypebonds.data", boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    
     """
-
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [10*3 + 2, 5*3 +2, 10*3+2, 3*3+2, 6*3+2, 20*3+2, 10*3 + 2], 2,2,2)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [200*3+2 ], 2,2,2)
     checkDistances(atomsinfo)
     msc.writelammpsdatajustatoms("MolinCryst.data", [xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("MolinCryst.data")
     msc.writelammpsdataonebondtype("MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     """
+
     p813MolList = makeMolList([9,7,6,12,3,6,1,1,1,1], [926,1436,1946,2456,2966,3476,3986,11126,12656,32546])
     print("p813MolList",p813MolList)
     atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p813MolinCryst.xyz", p813MolList, 20, 20, 20)
@@ -1215,9 +1239,9 @@ def main():
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p813MolinCryst.data")
     msc.writelammpsdataonebondtype("p813MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     atomsinfo = readlammpsbondsPPctypes("p813MolinCrystbonds.data", "p813MolinCrystCtype.data")
-    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p813MolinCrystCustomBonds.data")
+    boxcoords, masstypes, atoms, bonds, angles, dihedrals, oldatomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p813MolinCrystCustomBonds.data")
     msc.writelammpsdataonebondtype("p813MolinCrystCtypebonds.data", boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
-    """
+    
     #pMPMolList = makeMolList([3, 4, 10, 11, 8, 4, 1, 1, 1, 1, 1], [926, 1526, 2126, 2726, 3326, 3926, 4526, 6326, 6926, 8126, 54326])
     #print("pMPMolList",pMPMolList)
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("pMPMolinCryst.xyz", pMPMolList, 20, 20, 20)
