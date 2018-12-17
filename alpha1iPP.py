@@ -1196,15 +1196,29 @@ def checkNumberofPosBondsandAdd(atomsinfo):
         bondsinfo[i,2] = atoms1[i]
         bondsinfo[i,3] = atoms2[i]
     return bondsinfo
-
-
+def checkForTriangles(bondsinfo, natoms):
+    print("looking for triangles")
+    atomsBonds = [[] for i in range(natoms)]
+    #print("atomsBonds", atomsBonds)
+    for i in range(len(bondsinfo)):
+        atom1 = int(bondsinfo[i,2])
+        atom2 = int(bondsinfo[i,3])
+        atomsBonds[atom1-1].append(atom2)
+        atomsBonds[atom2-1].append(atom1)
+    for i in range(natoms):
+        bonds = atomsBonds[i]
+        #print("bonds", bonds)
+        for ii in range(len(bonds)-1): 
         
-
+            batom1  = int(bonds[ii]) 
+            batom2 = int(bonds[ii+1])
+            if batom2 in atomsBonds[batom1-1] or batom1 in atomsBonds[batom2-1]:
+                    print("there is triangle", "atom1", i+1, "atom2", batom1, "atom3", batom2)
         
 
 
 def main():
-    
+    """
     p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
     print("p613MolList",p613MolList)
     atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
@@ -1221,6 +1235,7 @@ def main():
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, oldatomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCrystCustomBonds.data")
     
     msc.writelammpsdataonebondtype("p613MolinCrystCtypebonds.data", boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    """
     
     """
     atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [200*3+2 ], 2,2,2)
@@ -1236,6 +1251,7 @@ def main():
     atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p813MolinCryst.xyz", p813MolList, 20, 20, 20)
     msc.writelammpsdatajustatoms("p813MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
+    checkForTriangles(bondsinfo, len(atomsinfo))
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p813MolinCryst.data")
     msc.writelammpsdataonebondtype("p813MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     atomsinfo = readlammpsbondsPPctypes("p813MolinCrystbonds.data", "p813MolinCrystCtype.data")
