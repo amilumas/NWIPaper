@@ -802,16 +802,45 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     spacecount = minspace
     alldone = False
     nc = 0
+    rcoords = np.zeros((9, 3))
+    rcoords[:, 0] = [float(i) for i in "-0.0727 -0.0765 -0.1021 -0.3087 -0.1146 -0.1044 0.2775 0.0872 0.1026".split()]
+    rcoords[:, 1] = [float(i) for i in "0.2291 0.1592 0.1602 0.0589 0.0928 0.0854 0.0797 0.1156 0.1221".split()]
+    rcoords[:, 2] = [float(i) for i in "0.2004 0.2788 0.5098 0.4941 0.6057 0.8428 0.9260 0.9730 1.2109".split()]
+    widthy = max(rcoords[:, 1]) - min(rcoords[:, 1])
+    widthx = max(rcoords[:, 0]) - min(rcoords[:, 0])
+    spacing = widthy / 2
+
+    xnegmin = min(-rcoords[:, 0])
+    xposmin = min(rcoords[:, 0])
+    diffxmin = xposmin - xnegmin
+    symmetries = np.array([[1, 1, 1], [-1, -1, -1], [1, -1 + 0.5, 1 + 0.5], [-1, 1 + 0.5, -1 + 0.5]])
+    symmetriesM = np.array([[1, 1, 1], [-1, -1, -1], [1, 1, 1], [-1, -1, -1]])
+    symmetriesA = np.array(
+        [[1, spacing, 0], [diffxmin, 1 - spacing, 1], [0, 1 + spacing, 0], [1 + diffxmin, 2 - spacing, 1]])
+    unitcell = np.zeros((len(symmetries) * len(rcoords), 3))
+    ucount = 0
+    for s in range(len(symmetries)):
+        print("symmetries", symmetries[s])
+        for ci in range(len(rcoords)):
+            unitcell[ucount, 1] = rcoords[ci, 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
+            unitcell[ucount, 2] = (rcoords[ci, 2] * symmetriesM[s, 2] + symmetriesA[s, 2])
+            unitcell[ucount, 0] = rcoords[ci, 0] * symmetriesM[s, 0] + symmetriesA[s, 0]
+            ucount += 1
+    # calculate distances between ends:
+    # pairs in unit cells
+    print("unitcell original", unitcell)
     unitcellnew = np.copy(unitcell) 
     #Reverse
     unitcellReverse = np.copy(unitcell)
     started = True
     for i in range(36):
         unitcellReverse[i,:] = list(unitcell[35-i,:])
-    """
-    switch1 = [2, 5, 10, 13, 19, 21, 27, 31]
-    switch2 = [3, 6, 11, 14, 20, 22, 28, 33]
     
+    #switch1 = [3, 6,12,15]
+    #switch2 = [4, 7,13,16]
+    #switch1 = [0,2,9,6,7,8,11,19,18,19]
+    #switch2 = [1,3,5,9,9,9,12,14,15,16]
+    """
     for i,x in enumerate(switch1):
         x2  = switch2[i]
         tmpU = list(unitcell[x2])
@@ -828,30 +857,51 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
         unitcellReverse[x2] = list(unitcellReverse[x])
         unitcellReverse[x] = tmpR
     """
+    # sort by z value
+    sort_index1 = np.argsort(unitcell[0:9,2])
+    sort_index2 = np.argsort(unitcell[9:18,2])
+    sort_index3 = np.argsort(unitcell[18:27,2])
+    sort_index4 = np.argsort(unitcell[27:36,2])
+    totalSortRegular = np.zeros(36)
+    totalSortRegular[0:9] = sort_index1
+    totalSortRegular[9:18] = sort_index2[::-1]
+    totalSortRegular[18:27] = sort_index3
+    totalSortRegular[27:36] = sort_index4[::-1]
+    unitcellOld = np.copy(unitcell)
+    for i in range(36):
+        unitcell[i,:] = list(unitcellOld[int(totalSortRegular[i]),:])
+        unitcellReverse[i,:] = list(unitcellOld[35-int(totalSortRegular[i]),:])
+
+
+    
+
 
     print("Distances in unitcell")
-    for i in range(34):
+    for i in range(2,36):
         x1 = unitcell[i,0]*a
         y1 = unitcell[i,1]*b
         z1 = unitcell[i,2]*c
-        for j in range(i+1,i+3):
+        for j in range(i-2,i):
             x2 = unitcell[j,0]*a
             y2 = unitcell[j,1]*b
             z2 = unitcell[j,2]*c
             dist  = ((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)**0.5
             print("dist", dist, "i", i, "j", j)
     print("Distances in reverse unitcell")
-    for i in range(34):
+    for i in range(2,36):
         x1  = unitcellReverse[i,0]*a
         y1 = unitcellReverse[i,1]*b
         z1 = unitcellReverse[i,2]*c
-        for j in range(i+1, i+3):
+        for j in range(i-2, i):
             x2 = unitcellReverse[j,0]*a
             y2 = unitcellReverse[j,1]*b
             z2 = unitcellReverse[j,2]*c
             dist = ((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)**0.5
             print("dist", dist, "i", i, "j", j)
+    print("Regular Unit cell")
 
+    for i in range(36):
+        print("i", i, unitcell[i,0]*a, unitcell[i,1]*b, unitcell[i,2]*c)
 
 
     srclist = [2, 1, 0, 3]
