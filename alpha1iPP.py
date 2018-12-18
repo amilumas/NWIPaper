@@ -42,7 +42,7 @@ def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, m
             vec = np.array([slope, 1])
             distvec = sum(vec**2)**0.5
             normvec = vec/distvec
-            print("i", i,"normvec", normvec)
+            #print("i", i,"normvec", normvec)
             sx = conx[i] + np.sign(normvec[0])*(spacing-pad + extra)*(normvec[0])
             sz = conz[i] + np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
             sidex.append(sx)
@@ -114,7 +114,7 @@ def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,sp
             vec = np.array([slope, 1])
             distvec = sum(vec**2)**0.5
             normvec = vec/distvec
-            print("i", i,"normvec", normvec)
+            #print("i", i,"normvec", normvec)
             
 
             sy = cony[i] - np.sign(normvec[0])*(spacing-pad + extra)*(normvec[0])
@@ -171,7 +171,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #find unit vector of new c axis
     zoffset = np.cos(math.radians(diffangle))
     xoffset = -np.sin(math.radians(diffangle))
-    print("xoffset", xoffset, "zoffset", zoffset)
+    #print("xoffset", xoffset, "zoffset", zoffset)
     rcoords = np.zeros((9,3))
     rcoords[:,0] = [float(i) for i in "-0.0727 -0.0765 -0.1021 -0.3087 -0.1146 -0.1044 0.2775 0.0872 0.1026".split()]
     rcoords[:,1] = [float(i) for i in "0.2291 0.1592 0.1602 0.0589 0.0928 0.0854 0.0797 0.1156 0.1221".split()]
@@ -644,7 +644,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     unitcell = np.zeros((len(symmetries) * len(rcoords), 3))
     ucount = 0
     for s in range(len(symmetries)):
-        print("symmetries", symmetries[s])
+        #print("symmetries", symmetries[s])
         for ci in range(len(rcoords)):
             unitcell[ucount, 1] = rcoords[ci, 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
             unitcell[ucount, 2] = (rcoords[ci, 2] * symmetriesM[s, 2] + symmetriesA[s, 2])
@@ -652,12 +652,12 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
             ucount += 1
     # calculate distances between ends:
     # pairs in unit cells
-    print("unitcell before", unitcell)
+    #print("unitcell before", unitcell)
 
     #change unit cell order to mesh with order of beads
     first = list(unitcell[0,:])
-    print("first", first)
-    print("second", unitcell[1])
+    #print("first", first)
+    #print("second", unitcell[1])
     unitcell[0,:] = list(unitcell[1])
     unitcell[1,:] = first
     # swich another unit cell
@@ -668,7 +668,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     mid = list(unitcell[18,:])
     unitcell[18,:] = list(unitcell[19,:])
     unitcell[19,:] = mid
-    print("unitcell", unitcell)
+    #print("unitcell", unitcell)
     ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c+0.5], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
     ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.6, unitcell[10][2]*c+0.2], [unitcell[18][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+0.6, unitcell[28][2]*c+0.2], [unitcell[0,0]*a, (unitcell[0,1]+2)*b, unitcell[0,2]*c]]
     midpoints = []
@@ -697,7 +697,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     Bline = []
 
     for i in range(len(ends1s)):
-        print(ends1s[i][1], midpoints[i][1], ends2s[i][1], ends1s[i][2], midpoints[i][2], ends2s[i][2])
+        #print(ends1s[i][1], midpoints[i][1], ends2s[i][1], ends1s[i][2], midpoints[i][2], ends2s[i][2])
         ph1 = midpoints[i][1]
         pk1 = midpoints[i][2]
         pa1 = (ends1s[i][2] - pk1) / ((ends1s[i][1] - ph1) ** 2)
@@ -834,7 +834,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     sortedInds2 = [1, 0, 2, 4, 3, 5, 7, 6, 8]
     sortedInds3 = [1, 0, 2, 4, 3, 5, 7, 6, 8]
     for s in range(len(symmetries)):
-        print("symmetries", symmetries[s])
+        #print("symmetries", symmetries[s])
         for ci in range(len(rcoords)):
             if s == 0:
                 unitcell[ucount, 1] = rcoords[sortedInds0[ci], 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
@@ -951,6 +951,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                
                             if not alldone and madded == moleculeClist[moli]:
                                 moli = moli + 1
+                                print("moli", moli)
                                 madded = 0
                                 spacecount = 0
                                 if moli == len(moleculeClist):
@@ -1023,6 +1024,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                             madded = 0
 
                             moli = moli + 1
+                            print("moli", moli)
                             if moli == len(moleculeClist):
                                 alldone = True
                             #print("mol", mol)
@@ -1094,10 +1096,13 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 count = count + 1
                         if not alldone and madded == moleculeClist[moli]:
                             madded = 0
-
                             moli = moli + 1
+                            print("moli", moli)
                             if moli == len(moleculeClist):
                                 alldone = True
+                            spacecount = 0
+                            minspace = 5 +nc%2
+                            started = False
 
     if count < len(countRef) or acount != nBeads+1:
         print("ERROR: NOT ALL WERE SHOWN")
@@ -1153,8 +1158,8 @@ def checkDistances(atomsinfo):
             z2 = atomsinfo[j][5]
 
             dist = ((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**0.5
-            threshold = 1.7
-            small = 1
+            threshold = 1.89
+            small = 1.2
             if dist < threshold:
                 nbonds = nbonds + 1
                 #print("nbonds", nbonds, "dist", vars()["dist" + str(ii+1)])
@@ -1167,7 +1172,7 @@ def checkDistances(atomsinfo):
 
 
 def checkNumberofPosBondsandAdd(atomsinfo):
-    threshold = 1.87
+    threshold = 1.863
     N = len(atomsinfo)
     print("natoms", N)
     nbonds = 0
@@ -1218,7 +1223,7 @@ def checkForTriangles(bondsinfo, natoms):
 
 
 def main():
-    """
+    
     p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
     print("p613MolList",p613MolList)
     atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p613MolinCryst.xyz", p613MolList, 20, 20, 20)
@@ -1235,15 +1240,20 @@ def main():
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, oldatomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCrystCustomBonds.data")
     
     msc.writelammpsdataonebondtype("p613MolinCrystCtypebonds.data", boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
-    """
     
     """
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [200*3+2 ], 2,2,2)
+    molList = makeMolList([9,7,1], [926,1436,3*1+2]) 
+    print("molList", molList, "molecules", len(molList), "correct bonds", sum(molList) - len(molList))
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", molList, 20,20,20)
     checkDistances(atomsinfo)
     msc.writelammpsdatajustatoms("MolinCryst.data", [xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("MolinCryst.data")
     msc.writelammpsdataonebondtype("MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    checkForTriangles(bondsinfo, len(atomsinfo))
+    checkDistances(atomsinfo)
+    #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("MolinCrystCustomBonds.data")
+    #checkForTriangles(bondsinfo, len(atomsinfo))
     """
 
     p813MolList = makeMolList([9,7,6,12,3,6,1,1,1,1], [926,1436,1946,2456,2966,3476,3986,11126,12656,32546])
@@ -1251,19 +1261,29 @@ def main():
     atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("p813MolinCryst.xyz", p813MolList, 20, 20, 20)
     msc.writelammpsdatajustatoms("p813MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
+    checkDistances(atomsinfo)
     checkForTriangles(bondsinfo, len(atomsinfo))
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p813MolinCryst.data")
     msc.writelammpsdataonebondtype("p813MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     atomsinfo = readlammpsbondsPPctypes("p813MolinCrystbonds.data", "p813MolinCrystCtype.data")
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, oldatomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p813MolinCrystCustomBonds.data")
-    msc.writelammpsdataonebondtype("p813MolinCrystCtypebonds.data", boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    msc.writelammpsdataonebondtype("p813MolinCrystCtypebonds.data", boxcoords, [15.035, 14.027, 13.019], atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     
-    #pMPMolList = makeMolList([3, 4, 10, 11, 8, 4, 1, 1, 1, 1, 1], [926, 1526, 2126, 2726, 3326, 3926, 4526, 6326, 6926, 8126, 54326])
-    #print("pMPMolList",pMPMolList)
-    #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("pMPMolinCryst.xyz", pMPMolList, 20, 20, 20)
-    #msc.writelammpsdatajustatoms("pMPMolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    
+    pMPMolList = makeMolList([3, 4, 10, 11, 8, 4, 1, 1, 1, 1, 1], [926, 1526, 2126, 2726, 3326, 3926, 4526, 6326, 6926, 8126, 54326])
+    print("pMPMolList",pMPMolList)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("pMPMolinCryst.xyz", pMPMolList, 20, 20, 20)
+    msc.writelammpsdatajustatoms("pMPMolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
+    checkDistances(atomsinfo)
+    checkForTriangles(bondsinfo, len(atomsinfo))
+    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("pMPMolinCryst.data")
+    msc.writelammpsdataonebondtype("pMPMolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    atomsinfo = readlammpsbondsPPctypes("pMPMolinCrystCustomBonds.data", "pMPMolinCrystCtype.data")
+    boxcoords, masstypes, atoms, bonds, angles, dihedrals, oldatomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("pMPMolinCrystCustomBonds.data")
+    msc.writelammpsdataonebondtype("pMPMolinCrystCtypebonds.data", boxcoords, [15.035, 14.027, 13.019], atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     #readlammpsbondsPPctypes("pMPMolinCrystbonds.data", "pMPMolinCrystCtype.data")
-
+    
 
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz",[3*10 + 2, 3*10 + 2, 3*10 + 2, 10*3 + 2], 5, 5, 5)
     #msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
