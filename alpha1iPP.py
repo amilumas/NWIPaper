@@ -1239,7 +1239,7 @@ def main():
     atomsinfo = readlammpsbondsPPctypes("p613MolinCrystCustomBonds.data", "p613MolinCrystCtype.data")
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, oldatomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p613MolinCrystCustomBonds.data")
     
-    msc.writelammpsdataonebondtype("p613MolinCrystCtypebonds.data", boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    msc.writelammpsdataonebondtype("p613MolinCrystCtypebonds.data", boxcoords, [15.035, 14.027, 13.019], atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     
     """
     molList = makeMolList([9,7,1], [926,1436,3*1+2]) 
@@ -1265,7 +1265,7 @@ def main():
     checkForTriangles(bondsinfo, len(atomsinfo))
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p813MolinCryst.data")
     msc.writelammpsdataonebondtype("p813MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
-    atomsinfo = readlammpsbondsPPctypes("p813MolinCrystbonds.data", "p813MolinCrystCtype.data")
+    atomsinfo = readlammpsbondsPPctypes("p813MolinCrystCustomBonds.data", "p813MolinCrystCtype.data")
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, oldatomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p813MolinCrystCustomBonds.data")
     msc.writelammpsdataonebondtype("p813MolinCrystCtypebonds.data", boxcoords, [15.035, 14.027, 13.019], atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     
