@@ -73,6 +73,77 @@ def linear2parabolaXZConnect(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, m
             sidez.append(sz)
     return conx, cony, conz, sidex, sidey, sidez
 
+def linear2parabolaXZConnect2(la, lb, pa1, ph1, pk1, pa2, ph2, pk2, start, end, mid, spacing):
+    npoints = 1000
+    xpos1 = np.linspace(start[0], mid[0], npoints)
+    xpos2 = np.linspace(mid[0], end[0], npoints)
+    ypos1 = la*xpos1 + lb*np.ones(npoints)
+    ypos2 = la*xpos2 + lb*np.ones(npoints)
+    zpos1 = pa1*(xpos1 - ph1)**2 + pk1
+    zpos2 = pa2*(xpos2 - ph2)**2 + pk2
+    #print("xpos1", xpos1)
+    #print("zpos1", zpos1)
+    dists1 = np.zeros(npoints)
+    dists2 = np.zeros(npoints)
+    conx = []
+    cony = []
+    conz = []
+    sidex = []
+    sidey = []
+    sidez = []
+    dists1[0] = 0
+    pad = 1.5
+    extra = 0
+    nspacing = spacing
+    for i in range(npoints-1):
+        dists1[i+1] = dists1[i] + ((xpos1[i] - xpos1[i+1])**2 + (ypos1[i] - ypos1[i+1])**2 + (zpos1[i] - zpos1[i+1])**2)**0.5
+        if dists1[i] >= nspacing:
+            conx.append(xpos1[i+1])
+            cony.append(ypos1[i+1])
+            conz.append(zpos1[i+1])
+            nspacing = nspacing + spacing
+    dists2[0] = dists1[-1]
+    N1 = len(conx)
+    for i in range(N1):
+        if i%2 == 1:
+            sy = cony[i] - pad
+            slope = -1*(pa1*2*(conx[i] - ph1))
+            inter = conz[i] - slope*conx[i]
+            vec = np.array([slope, 1])
+            distvec = sum(vec**2)**0.5
+            normvec = vec/distvec
+            #print("i", i,"normvec", normvec)
+            sx = conx[i] + np.sign(normvec[0])*(spacing-pad + extra)*(normvec[0])
+            sz = conz[i] + np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
+            sidex.append(sx)
+            sidey.append(sy)
+            sidez.append(sz)
+
+    for i in range(npoints-1):
+        dists2[i+1] = dists2[i] + ((xpos2[i] - xpos2[i+1])**2 + (ypos2[i] - ypos2[i+1])**2 + (zpos2[i] - zpos2[i+1])**2)**0.5
+        distend = ((xpos2[i+1] - end[0])**2 + (ypos2[i+1] - end[1])**2 + (zpos2[i+1] - end[2])**2)**2
+        if dists2[i] >= nspacing and distend > spacing - 0.1:
+            conx.append(xpos2[i+1])
+            cony.append(ypos2[i+1])
+            conz.append(zpos2[i+1])
+            nspacing = nspacing + spacing
+    N = len(conx)
+    for i in range(N1, N):
+        if i%2 == 1:
+            sy = cony[i] + pad
+            slope = -1*(pa2*2*(conx[i] - ph2))
+            inter = conz[i] - slope*conx[i]
+            vec = np.array([slope, 1])
+            distvec = sum(vec**2)**0.5
+            normvec = vec/distvec
+            sx = conx[i] -  np.sign(normvec[0])*(spacing-pad + extra)*normvec[0]
+            sz = conz[i] -  np.sign(normvec[0])*(spacing-pad + extra)*normvec[1]
+            sidex.append(sx)
+            sidey.append(sy)
+            sidez.append(sz)
+    return conx, cony, conz, sidex, sidey, sidez
+
+
 
 def linear2parabolaConnect(la,lb,pa1, ph1, pk1, pa2, ph2, pk2, start, end,mid,spacing):
     npoints = 1000
@@ -195,7 +266,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     print("xnegmin", xnegmin, "xposmin", xposmin, "diffxmin", diffxmin)
     symmetries = np.array([[1,1,1], [-1,-1,-1], [1,-1+0.5, 1+0.5], [-1, 1+0.5, -1+0.5]])
     symmetriesM = np.array([[1,1,1], [-1, -1, -1], [1, 1, 1], [-1, -1, -1]])
-    symmetriesA = np.array([[0.5,0,0], [0, 0.5, 0.5], [0, 0.5, 0], [0.5, 1, 0.5]])
+    symmetriesA = np.array([[0.5,0,0], [0, 0.5, 1], [0, 0.5, 0], [0.5, 1, 1]])
     #symmetriesNewM = np.array([[1,1,1],[-1,-1,-1],[1,-1,1],[-1,1,-1]])
     #symmetriesNewA = np.array([[]])
     unitcell = np.zeros((len(symmetries)*len(rcoords),3))
@@ -229,8 +300,8 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
 
 
 
-    ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
-    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.5, unitcell[10][2]*c], [unitcell[19][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+1, unitcell[28][2]*c], [unitcell[0,0]*a, (unitcell[0,1]+1)*b, unitcell[0,2]*c]]
+    ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c+0.5], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
+    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.8, unitcell[10][2]*c], [unitcell[19][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+1, unitcell[28][2]*c], [unitcell[0,0]*a, (unitcell[0,1]+1)*b, unitcell[0,2]*c]]
     midpoints = []
     for i in range(len(ends1s)):
         #print("end1", ends1s[i], "end2", ends2s[i])
@@ -286,29 +357,38 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
         Aline.append(la)
         Bline.append(lb) 
         
-
-
     connections1 = []
     connections2 = []
     connections3 = []
     connections4 = []
-    npoints = [8,6,8,6]
-    spacing = [1.54, 1.54, 1.54, 1.54, 1.54]
-    
+    connectionsR1 = []
+    connectionsR2 = []
+    connectionsR3 = []
+    connectionsR4 = []
+    npoints = [8, 6, 8, 6]
+    spacing = [1.4, 1.4, 1.4, 1.4, 1.54]
     for i in range(4):
         conx, cony, conz, sidex, sidey, sidez = linear2parabolaConnect(Aline[i], Bline[i], Aparabola1[i], Hparabola1[i], Kparabola1[i], Aparabola2[i], Hparabola2[i], Kparabola2[i], ends1s[i], ends2s[i], midpoints[i], spacing[i])
         sidec = 0
+        sidecR = len(sidex) -1
         for j in range(len(conx)):
             vars()["connections" + str(i + 1)].append([conx[j], cony[j], conz[j]])
             if j % 2 == 0:
                 vars()["connections" + str(i + 1)].append([sidex[sidec], sidey[sidec], sidez[sidec]])
                 sidec += 1
+            jR = len(conx) -1 - j
+            vars()["connectionsR" + str(i+1)].append([conx[jR], cony[jR], conz[jR]])
+            if jR %2 == 0:
+                vars()["connectionsR" + str(i+1)].append([sidex[sidecR], sidey[sidecR], sidez[sidecR]])
+                sidecR = sidecR - 1
         #for j in range(len(conx)//2, len(conx)):
             #if j % 2 == 0:
                 #vars()["connections" + str(i+1)].append([sidex[sidec], sidey[sidec], sidez[sidec]])
                 #sidec +=1
 
             #vars()["connections" + str(i+1)].append([conx[j], cony[j], conz[j]])
+
+    
 
     #planes connection
     
@@ -346,7 +426,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     penda2 = (p2end2[2] - pendk2)/((p2end2[0] - pendh2)**2)
     print("p2end1", p2end1, "p2end2", p2end2)
     print("penda1", penda1, "penda2", penda2)
-    p2conx, p2cony, p2conz,p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2, pendh2, pendk2, p2end1, p2end2, pmid, 1.6)
+    p2conx, p2cony, p2conz,p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect2(pla, plb, penda1, pendh1, pendk1, penda2, pendh2, pendk2, p2end1, p2end2, pmid, 1.6)
     print("p2sidex", p2sidex, "p2sidey", p2sidey, "p2sidez", p2sidez)
     print("p2conx", p2conx, "p2cony", p2cony, "p2conz", p2conz)
     pconnections1 = []
@@ -366,7 +446,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     cside = 0
     for i in range(len(p2conx)):
         pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
-        if i % 2 == 0:
+        if i % 2 == 1:
             pconnections2.append([p2sidex[cside], p2sidey[cside], p2sidez[cside]])
             cside += 1
     #for i in range(len(p2conx)//2, len(p2conx)):
@@ -375,11 +455,65 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
             #cside += 1
         #pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
 
-    unitcellnew = np.copy(unitcell) 
+    rcoords = np.zeros((9, 3))
+    rcoords[:, 0] = [float(i) for i in "-0.0727 -0.0765 -0.1021 -0.3087 -0.1146 -0.1044 0.2775 0.0872 0.1026".split()]
+    rcoords[:, 1] = [float(i) for i in "0.2291 0.1592 0.1602 0.0589 0.0928 0.0854 0.0797 0.1156 0.1221".split()]
+    rcoords[:, 2] = [float(i) for i in "0.2004 0.2788 0.5098 0.4941 0.6057 0.8428 0.9260 0.9730 1.2109".split()]
+    widthy = max(rcoords[:, 1]) - min(rcoords[:, 1])
+    widthx = max(rcoords[:, 0]) - min(rcoords[:, 0])
+    spacing = widthy / 2
+
+    xnegmin = min(-rcoords[:, 0])
+    xposmin = min(rcoords[:, 0])
+    diffxmin = xposmin - xnegmin
+    symmetries = np.array([[1, 1, 1], [-1, -1, -1], [1, -1 + 0.5, 1 + 0.5], [-1, 1 + 0.5, -1 + 0.5]])
+    symmetriesM = np.array([[1, 1, 1], [-1, -1, -1], [1, 1, 1], [-1, -1, -1]])
+    symmetriesA = np.array([[0.5, 0, 0], [0, 0.5, 1], [0, 0.5, 0], [0.5, 1, 1]])
+    unitcell = np.zeros((len(symmetries) * len(rcoords), 3))
+    ucount = 0
+    sortedInds0 = [1, 0, 2, 4, 3, 5, 7, 6, 8]
+    sortedInds1 = [1, 0, 2, 4, 3, 5, 7, 6, 8]
+    sortedInds2 = [1, 0, 2, 4, 3, 5, 7, 6, 8]
+    sortedInds3 = [1, 0, 2, 4, 3, 5, 7, 6, 8]
+    for s in range(len(symmetries)):
+        #print("symmetries", symmetries[s])
+        for ci in range(len(rcoords)):
+            if s == 0:
+                unitcell[ucount, 1] = rcoords[sortedInds0[ci], 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
+                unitcell[ucount, 2] = (rcoords[sortedInds0[ci], 2] * symmetriesM[s, 2] + symmetriesA[s, 2])
+                unitcell[ucount, 0] = rcoords[sortedInds0[ci], 0] * symmetriesM[s, 0] + symmetriesA[s, 0]
+                ucount += 1
+
+            elif s ==1:
+                unitcell[ucount, 1] = rcoords[sortedInds1[ci], 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
+                unitcell[ucount, 2] = (rcoords[sortedInds1[ci], 2] * symmetriesM[s, 2] + symmetriesA[s, 2])
+                unitcell[ucount, 0] = rcoords[sortedInds1[ci], 0] * symmetriesM[s, 0] + symmetriesA[s, 0]
+                ucount += 1
+            elif s == 2:
+                unitcell[ucount, 1] = rcoords[sortedInds2[ci], 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
+                unitcell[ucount, 2] = (rcoords[sortedInds2[ci], 2] * symmetriesM[s, 2] + symmetriesA[s, 2])
+                unitcell[ucount, 0] = rcoords[sortedInds2[ci], 0] * symmetriesM[s, 0] + symmetriesA[s, 0]
+                ucount += 1
+            elif s == 3:
+                unitcell[ucount, 1] = rcoords[sortedInds3[ci], 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
+                unitcell[ucount, 2] = (rcoords[sortedInds3[ci], 2] * symmetriesM[s, 2] + symmetriesA[s, 2])
+                unitcell[ucount, 0] = rcoords[sortedInds3[ci], 0] * symmetriesM[s, 0] + symmetriesA[s, 0]
+                ucount += 1
+
+    
+
+
     #Reverse
     unitcellReverse = np.copy(unitcell)
+    started = True
     for i in range(36):
         unitcellReverse[i,:] = list(unitcell[35-i,:])
+    sortedRInds = [0, 2, 1, 3, 5, 4, 6, 8, 7]
+    unitcellRcopy = np.copy(unitcellReverse)
+    for s in range(len(symmetries)):
+        for ci in range(len(rcoords)): 
+            unitcellReverse[s*9 + ci,:] = list(unitcellRcopy[s*9 + sortedRInds[ci],:])
+
   
     count = 1
     srclist = [2, 1, 0, 3]
@@ -432,7 +566,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                                 tx = x + z*xoffset
                                 ty = y 
                                 tz = z*zoffset
-                                atomsinfo.append([count, 5+s, 5+s, tx, ty, tz])
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                                 count = count + 1
                         if k == Rzlist[-1] and s%2 ==1 and (s != 3 or j < Ry-1) and connect:
                             for ii in range(len(vars()["connections"+str(s+1)])):
@@ -442,7 +576,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                                 tx = x + z*xoffset
                                 ty = y
                                 tz = z*zoffset
-                                atomsinfo.append([count, 5+s, 5+s, tx, ty, tz])
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                                 count = count + 1
                         if k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==0 and connect:
                             for ii in range(len(pconnections1)):
@@ -453,7 +587,7 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                                 ty = y
                                 tz = z*zoffset
 
-                                atomsinfo.append([count, 5+s, 5+s, tx, ty, tz])
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                                 count = count + 1
 
                         elif k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==1 and connect:
@@ -465,13 +599,13 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                                 tx = x + z*xoffset
                                 ty = y
                                 tz = z*zoffset
-                                atomsinfo.append([count, 5+s, 5+s, tx, ty, tz])
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                                 count = count + 1
 
                     else: 
                         sr = srclist[s]
                         #print("sr", sr)
-                        if k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==0 and connect:
+                        if k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==0:
                             for ii in range(len(pconnections1)):
                                 x = basex + pconnections1[ii][0]
                                 y = basey + pconnections1[ii][1]
@@ -479,12 +613,13 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                                 tx = x + z*xoffset
                                 ty = y
                                 tz = z*zoffset
-
-                                atomsinfo.append([count, 5+sr, 5+s, tx, ty, tz])
+                                
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
+                                    
                                 count = count + 1
 
-                        elif k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==1 and connect:
-
+                        elif k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==1:
+                            
                             for ii in range(len(pconnections2)):
                                 x = basex  + pconnections2[ii][0]
                                 y = pconnections2[ii][1]
@@ -492,27 +627,38 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
                                 tx = x + z*xoffset
                                 ty = y
                                 tz = z*zoffset
-                                atomsinfo.append([count, 5+sr, 5+s, tx, ty, tz])
+                                
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
+                                    
+                                
                                 count = count + 1
-                        elif k == Rzlist[-1] and sr%2 == 0 and connect:
-                            for ii in range(len(vars()["connections"+str(sr+1)])-1, -1, -1):
-                                x = basex + vars()["connections" + str(sr+1)][ii][0]
-                                y = basey + vars()["connections" + str(sr+1)][ii][1]
-                                z = basez + vars()["connections" + str(sr+1)][ii][2]
+                        elif k == Rzlist[-1] and sr%2 == 0:
+                            
+                            for ii in range(len(vars()["connectionsR"+str(sr+1)])):
+                                x = basex + vars()["connectionsR" + str(sr+1)][ii][0]
+                                y = basey + vars()["connectionsR" + str(sr+1)][ii][1]
+                                z = basez + vars()["connectionsR" + str(sr+1)][ii][2]
                                 tx = x + z*xoffset
                                 ty = y 
                                 tz = z*zoffset
-                                atomsinfo.append([count, 5+sr, 5+s, tx, ty, tz])
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
+                                    
                                 count = count + 1
-                        elif k == Rzlist[-1] and sr%2 ==1 and (sr != 3 or j < Ry-1) and connect:
-                            for ii in range(len(vars()["connections"+str(sr+1)])-1, -1, -1):
-                                x = basex + vars()["connections" + str(sr+1)][ii][0]
-                                y = basey + vars()["connections" + str(sr+1)][ii][1]
-                                z = vars()["connections" + str(sr+1)][ii][2]
+                        elif k == Rzlist[-1] and sr%2 ==1 and (sr != 3 or j != Rylist[-1]):
+                            
+                            for ii in range(len(vars()["connectionsR"+str(sr+1)])):
+                                if sr != 3:
+                                    x = basex + vars()["connectionsR" + str(sr+1)][ii][0]
+                                    y = basey + vars()["connectionsR" + str(sr+1)][ii][1]
+                                    z = vars()["connectionsR" + str(sr+1)][ii][2]
+                                elif sr == 3:
+                                    x = basex + vars()["connectionsR" + str(sr+1)][ii][0]
+                                    y = basey + vars()["connectionsR" + str(sr+1)][ii][1] - b
+                                    z = vars()["connectionsR" + str(sr+1)][ii][2]
                                 tx = x + z*xoffset
                                 ty = y
                                 tz = z*zoffset
-                                atomsinfo.append([count, 5+sr, 5+s, tx, ty, tz])
+                                atomsinfo.append([count, 5+s, 1, tx, ty, tz])
                                 count = count + 1
                         
                     
@@ -1159,8 +1305,8 @@ def checkDistances(atomsinfo):
             z2 = atomsinfo[j][5]
 
             dist = ((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**0.5
-            threshold = 1.89
-            small = 1.2
+            threshold = 1.863
+            small = 1
             if dist < threshold:
                 nbonds = nbonds + 1
                 #print("nbonds", nbonds, "dist", vars()["dist" + str(ii+1)])
@@ -1296,7 +1442,7 @@ def main():
     #msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     #readlammpsbondsPPctypes("MolinCrystbonds.data", "MolinCrystCtype.data")
     #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPC1type.data")
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 5, 5, 5)
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 20, 20, 20)
     msc.writelammpsdatajustatoms("TrialInfa1iPP.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     checkDistances(atomsinfo)
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("TrialInfa1iPP.data")
