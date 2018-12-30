@@ -337,7 +337,7 @@ Lmpsabainfo read_finalstructwithatombondangleinfo(string filename, int nlines)
 
 }
 
-vector <double> pbcdist(double coords1 [3], double coords2 [3], double boxcoords [3][2]){
+vector <double> pbcdist(double (& coords1) [3], double (& coords2) [3], double boxcoords [3][2]){
 	//cout << "pbcdist" << endl;
         double xlo = boxcoords[0][0];
         double xhi = boxcoords[0][1];
@@ -381,7 +381,7 @@ vector <double> pbcdist(double coords1 [3], double coords2 [3], double boxcoords
 
 }
 
-vector <double> makeunitvector(double i, double j, double k){
+vector <double> makeunitvector(double & i, double &  j, double &  k){
         double magnitude = pow(pow(i,2) + pow(j,2) + pow(k,2),0.5);
         vector <double> v;
         v.push_back(i/magnitude);
@@ -391,16 +391,8 @@ vector <double> makeunitvector(double i, double j, double k){
 
 }
 
-vector <double> localchainorientationvector(double bead1coords [3], double bead3coords [3], double boxcoords [3][2]){
-        double xlo = boxcoords[0][0];
-        double xhi = boxcoords[0][1];
-        double ylo = boxcoords[1][0];
-        double yhi = boxcoords[1][1];
-        double zlo = boxcoords[2][0];
-        double zhi = boxcoords[2][1];
-        double boxlenx = xhi - xlo;
-        double boxleny = yhi - ylo;
-        double boxlenz = zhi - zlo;
+vector <double> localchainorientationvector(double (&bead1coords) [3], double (&bead3coords) [3], double boxcoords [3][2]){
+        
 
 	//cout << " x diff " << bead3coords[0] - bead1coords[0] << " y diff " << bead3coords[1] - bead1coords[1] << " z diff " << bead3coords[2] - bead1coords[2] << endl;
         //find pbc distance vector between bead1 and bead3
@@ -414,7 +406,7 @@ vector <double> localchainorientationvector(double bead1coords [3], double bead3
 }
 
 
-double calccosthetaij(vector <double> vi, vector <double> vj){
+double calccosthetaij(vector <double> & vi, vector <double> & vj){
 double dotproduct = 0;
 double vimagnitude = 0;
 double vjmagnitude = 0;
@@ -447,6 +439,16 @@ vector <double> lookatanglescosthetaHermansz(Angleinfo anglesinfo, Atominfo atom
 	int atom3;
 	vector <double> vi;
 	vector <double> zi = {0,0,1};
+	double xlo = boxcoords[0][0];
+        double xhi = boxcoords[0][1];
+        double ylo = boxcoords[1][0];
+        double yhi = boxcoords[1][1];
+        double zlo = boxcoords[2][0];
+        double zhi = boxcoords[2][1];
+        double boxlenx = xhi - xlo;
+        double boxleny = yhi - ylo;
+        double boxlenz = zhi - zlo;
+
 	for (int i=0; i < angles; i++){
 		atom1 = anglesinfo.anglefirst[i] - 1;
 		atom2 = anglesinfo.anglesecond[i] - 1;
@@ -460,50 +462,188 @@ vector <double> lookatanglescosthetaHermansz(Angleinfo anglesinfo, Atominfo atom
 	
 }
 
-vector <double> lookatanglescostheta(Angleinfo anglesinfo, Atominfo atomsinfo, double boxcoords [3][2]){
+auto lookatanglescostheta(Angleinfo& anglesinfo, Atominfo& atomsinfo,  double boxcoords [3][2], vector <double> & xcoords, vector <double> & ycoords, vector <double> & zcoords, int & maxVecSize, int & ii){
 	int natoms = atomsinfo.natoms;
 	int angles = anglesinfo.nangles;
-	vector <double> allcosthetaij;
+	
+	
+	vector <double> allcosthetaijsqrd;
+
 	int atomi1;
 	int atomi2;
 	int atomi3;
 	int atomj1;
 	int atomj2;
 	int atomj3;
-	vector <double> vi;
-	vector <double> vj;
-	for (int i=0; i < angles; i++){
-		for (int j=i+1; j < angles; j++){
-			atomi1 = anglesinfo.anglefirst[i] - 1;
-			atomi2 = anglesinfo.anglesecond[i] -1;
-			atomi3 = anglesinfo.anglethird[i] -1;
-			atomj1 = anglesinfo.anglefirst[j] - 1;
-			atomj2 = anglesinfo.anglesecond[j] -1;
-			atomj3 = anglesinfo.anglethird[j] - 1;
-			double atomi1coords[3] = {atomsinfo.xcoords[atomi1],atomsinfo.ycoords[atomi1],atomsinfo.zcoords[atomi1]};
-			double atomi3coords[3] = {atomsinfo.xcoords[atomi3],atomsinfo.ycoords[atomi3],atomsinfo.zcoords[atomi3]};
-			double atomj1coords[3] = {atomsinfo.xcoords[atomj1],atomsinfo.ycoords[atomj1], atomsinfo.zcoords[atomj1]};
-			double atomj3coords[3] = {atomsinfo.xcoords[atomj3],atomsinfo.ycoords[atomj3], atomsinfo.zcoords[atomj3]};
-			vi = localchainorientationvector(atomi1coords,atomi3coords,boxcoords);
-			vj = localchainorientationvector(atomj1coords,atomj3coords,boxcoords);
-			allcosthetaij.push_back(calccosthetaij(vi,vj));
+	vector <double> vi (3);
+	vector <double> vj (3);
+	double dists1x;
+	double dists1y;
+	double dists1z;
+	double dists2x;
+	double dists2y;
+	double dists2z;
+	double atomi1coords[3];
+	double atomi3coords[3];
+	double atomj1coords[3];
+	double atomj3coords[3];
+	double costhetaij;
+	double xlo = boxcoords[0][0];
+        double xhi = boxcoords[0][1];
+        double ylo = boxcoords[1][0];
+        double yhi = boxcoords[1][1];
+        double zlo = boxcoords[2][0];
+        double zhi = boxcoords[2][1];
+        double boxlenx = xhi - xlo;
+        double boxleny = yhi - ylo;
+        double boxlenz = zhi - zlo;
+	double mag1;
+	double mag2;
+	int count = 0;
+	int next = 0;
+	for (int i=ii; i < angles; ++i){
+		//cout << "i " << i << " angles " << angles << " count " << count << endl;
+		next = (angles - i+1);
+		if (allcosthetaijsqrd.size() + next < maxVecSize){ 	
+			for (int j=i+1; j < angles; ++j){
+				//cout << "i" << i << " j " << j << " angles " << angles << endl;
+				
+				atomi1 = anglesinfo.anglefirst[i] - 1;
+				atomi2 = anglesinfo.anglesecond[i] -1;
+				atomi3 = anglesinfo.anglethird[i] -1;
+				atomj1 = anglesinfo.anglefirst[j] - 1;
+				atomj2 = anglesinfo.anglesecond[j] -1;
+				atomj3 = anglesinfo.anglethird[j] - 1;
+				
+				atomi1coords[0] = xcoords[atomi1];
+				atomi1coords[1] = ycoords[atomi1];
+				atomi1coords[2] = zcoords[atomi1];
+				atomi3coords[0] = xcoords[atomi3];
+				atomi3coords[1] = ycoords[atomi3];
+				atomi3coords[2] = zcoords[atomi3];
+				atomj1coords[0] = xcoords[atomj1];
+				atomj1coords[1] = ycoords[atomj1];
+				atomj1coords[2] = zcoords[atomj1];
+				atomj3coords[0] = xcoords[atomj3];
+				atomj3coords[1] = ycoords[atomj3];
+				atomj3coords[2] = zcoords[atomj3];
+				//atomi1coords= {atomsinfo.xcoords[atomi1],atomsinfo.ycoords[atomi1],atomsinfo.zcoords[atomi1]};
+				//atomi3coords = {atomsinfo.xcoords[atomi3],atomsinfo.ycoords[atomi3],atomsinfo.zcoords[atomi3]};
+				//atomj1coords = {atomsinfo.xcoords[atomj1],atomsinfo.ycoords[atomj1], atomsinfo.zcoords[atomj1]};
+				//atomj3coords = {atomsinfo.xcoords[atomj3],atomsinfo.ycoords[atomj3], atomsinfo.zcoords[atomj3]};
+				
+				//vi = localchainorientationvector(atomi1coords,atomi3coords,boxcoords);
+				//vj = localchainorientationvector(atomj1coords,atomj3coords,boxcoords);
+				//dists1 = pbcdist(atomi1coords, atomi3coords, boxcoords);
+				//dists2 = pbcdist(atomj1coords, atomj3coords, boxcoords);
 
-			
-		} 
+				dists1x = atomi1coords[0] - atomi3coords[0];
+				dists1y = atomi1coords[1] - atomi3coords[1];
+				dists1z = atomi1coords[2] - atomi3coords[2];
+				while (dists1x > boxlenx*0.5){
+					dists1x = dists1x - boxlenx;
+				}
+				while (dists1x < -boxlenx*0.5){
+					dists1x = dists1x + boxlenx;
+				}
+				while (dists1y > boxleny*0.5){
+					dists1y = dists1y - boxleny;
+				}
+				while (dists1y < -boxleny*0.5){
+					dists1y = dists1y + boxleny;
+				}
+				while (dists1z > boxlenz*0.5){
+					dists1z = dists1z - boxlenz;
+				}
+				while (dists1z < -boxlenz*0.5){
+					dists1z = dists1z + boxlenz;
+				}
+				
+				dists2x = atomj1coords[0] - atomj3coords[0];
+				dists2y = atomj1coords[1] - atomj3coords[1];
+				dists2z = atomj1coords[2] - atomj3coords[2];
+
+				while (dists2x > boxlenx*0.5){
+					dists2x = dists2x - boxlenx;
+				}
+				while (dists2x < -boxlenx*0.5){
+					dists2x = dists2x + boxlenx;
+				}
+				while (dists2y > boxleny*0.5){
+					dists2y = dists2y - boxleny;
+				}
+				while (dists2y < -boxleny*0.5){
+					dists2y = dists2y + boxleny;
+				}
+				while (dists2z > boxlenz*0.5){
+					dists2z = dists2z - boxlenz;
+				}
+				while (dists2z < -boxlenz*0.5){
+					dists2z = dists2z + boxlenz;
+				}
+
+
+				//cout << " boxlenx " << boxlenx << " boxleny " << boxleny << " boxlenz " << boxlenz << endl;
+				//cout << " pbc x dist " << dists[0] << " pbc y dist " << dists[1] << " pbc z dist " << dists[2] << endl;
+				//vi = makeunitvector(dists1[0], dists1[1], dists1[2]);
+				//vj = makeunitvector(dists2[0], dists2[1], dists2[2]);
+				mag1 = pow(pow(dists1x,2) + pow(dists1y,2) + pow(dists1z,2),0.5);
+				mag2 = pow(pow(dists2x,2) + pow(dists2y,2) + pow(dists2z,2),0.5);
+
+				vi[0]= dists1x/mag1;
+				vi[1] = dists1y/mag1;
+				vi[2] = dists1z/mag1;
+				vj[0] = dists2x/mag2;
+				vj[1] = dists2y/mag2;
+				vj[2] = dists2z/mag2;
+				
+				costhetaij = 0;
+
+				for (int ii=0;ii<3;ii++){
+					cout << " ii " << i << " vi[ii] " << vi[ii] << " vj[ii] " << vj[ii] << endl;
+					costhetaij = costhetaij + vi[ii]*vj[ii];
+				}
+				
+				cout << "costhetaij " << costhetaij << endl;
+				allcosthetaijsqrd.push_back((pow(costhetaij,2)));
+				count++;
+				
+				
+			} 
+		}
+		else {
+			ii = i;
+			return allcosthetaijsqrd;
+		}
 	}
-	return allcosthetaij;
+	return allcosthetaijsqrd;
 	
 
 }
 
 
 double calculateP2(double boxcoords [3][2], Atominfo atomsinfo, Angleinfo anglesinfo){
-        vector <double> allcosthetaij = lookatanglescostheta(anglesinfo, atomsinfo, boxcoords);
-        vector <double> allcosthetaijsqrd;
-        for (int i = 0;i < allcosthetaij.size(); i++){
-                allcosthetaijsqrd.push_back(pow(allcosthetaij[i],2));
-        }
-        double average = accumulate(allcosthetaijsqrd.begin(),allcosthetaijsqrd.end(),0.0)/allcosthetaijsqrd.size();
+	double nTerms = anglesinfo.nangles -1;
+	cout << "angles " << anglesinfo.nangles << " nTerms " << nTerms << endl;
+	double totalTerms = (nTerms/2.0)*(anglesinfo.nangles);
+	int tTerms = int(totalTerms);
+	cout << " totalTerms " << totalTerms << endl;
+	int maxVecSize = 2000000000;
+	cout << "maxVecSize " << maxVecSize << endl;
+	int nVectors = totalTerms/maxVecSize + 1;
+	int ii = 0;
+	cout << "nVectors " << nVectors << endl;
+	
+	vector <double> allcosthetaijsqrd;
+	double average; 
+        for (int i = 0; i < nVectors; i++){
+		cout << "i " << i << endl;
+		allcosthetaijsqrd = (lookatanglescostheta(anglesinfo, atomsinfo, boxcoords, atomsinfo.xcoords, atomsinfo.ycoords, atomsinfo.zcoords, maxVecSize, ii));
+		average += accumulate(allcosthetaijsqrd.begin(), allcosthetaijsqrd.end(),0.0);
+	}
+      
+	average = average/totalTerms;
+	//accumulate(allcosthetaijsqrd.begin(),allcosthetaijsqrd.end(),0.0)/allcosthetaijsqrd.size();
 	cout << "average: " << average << endl;
         double P2 = (3.0*average - 1.0)/2.0;
 	cout << "orientation P2 " << P2 << endl;
@@ -941,9 +1081,9 @@ vector<vector<vector<double>>> localP2(double boxcoords[3][2], Atominfo atomsinf
 			for (int k=0; k < nbinsz; k++){
 				costhetas = allcosthetaij[i][j][k];
 				//cout << "len(costhetas) " << costhetas.size() << endl;		
-				for (int iii = 0; iii < costhetas.size(); iii++){
+				//for (int iii = 0; iii < costhetas.size(); iii++){
 					//cout << costhetas[iii] << endl;
-				}
+				//}
 				if (costhetas.size() >=1){
 					//cout << "in if costhetas.size() " << costhetas.size() << endl;
 					vector <double> costhetasqrd;
@@ -1162,7 +1302,23 @@ LmpsTraj readlammpstraj(string lammpstraj,int nlines){
 	
 }
 	 
+double EffcalcCrystallinityLammpsData(string lammpsdatafile, double resolutions [3], int nlinesdata){
+	Lmpsabainfo lmpi = read_finalstructwithatombondangleinfo(lammpsdatafile, nlinesdata);
+	cout << "read lammps data file " << lammpsdatafile << endl;
+	double boxcoords[3][2];
+	boxcoords[0][0] = lmpi.xlo;
+	boxcoords[0][1] = lmpi.xhi;
+	boxcoords[1][0] = lmpi.ylo;
+	boxcoords[1][1] = lmpi.yhi;
+	boxcoords[2][0] = lmpi.zlo;
+	boxcoords[2][1] = lmpi.zhi;
+	vector <int> coordinateindices = {0,1,2};
+	
 
+
+
+
+}
 double calcCrystallinityLammpsData(string lammpsdatafile, double resolutions [3], int nlinesdata){
 	Lmpsabainfo lmpi = read_finalstructwithatombondangleinfo(lammpsdatafile,nlinesdata);
         cout << "read lammps data file " << lammpsdatafile << endl;
@@ -1213,9 +1369,25 @@ vector <double> calcCrystallinityLammpstrajdata(string lammpsdatafile, string la
 
 }
 
-InfoLmpsData calcP2CrystandlocalLammpsData(string lammpsdatafile, double resolutions [3], int nlinesdata, vector <int> coordinateindicies){
+InfoLmpsData calcP2CrystandlocalLammpsData(string lammpsdatafile, double resolutions [3], int nlinesdata, vector <int> coordinateindicies, vector <int> relAngleTypes){
 	Lmpsabainfo lmpi = read_finalstructwithatombondangleinfo(lammpsdatafile, nlinesdata);
 	cout << "read lammps data file " << lammpsdatafile << endl;
+	Angleinfo anglesinfo;
+	anglesinfo.nangles = 0;
+	int atype;
+	for (int i = 0; i < lmpi.ani.nangles; i++){
+		atype = lmpi.ani.angletype[i];
+		if (find(relAngleTypes.begin(), relAngleTypes.end(), atype) != relAngleTypes.end()){
+			anglesinfo.nangles++;
+			anglesinfo.anglenumber.push_back(anglesinfo.nangles);
+			anglesinfo.angletype.push_back(atype);
+			anglesinfo.anglefirst.push_back(lmpi.ani.anglefirst[i]);
+			anglesinfo.anglesecond.push_back(lmpi.ani.anglesecond[i]);
+			anglesinfo.anglethird.push_back(lmpi.ani.anglethird[i]);
+		}
+	}
+
+
 	double boxcoords[3][2];
                 boxcoords[0][0] = lmpi.xlo;
                 boxcoords[0][1] = lmpi.xhi;
@@ -1223,24 +1395,25 @@ InfoLmpsData calcP2CrystandlocalLammpsData(string lammpsdatafile, double resolut
                 boxcoords[1][1] = lmpi.yhi;
                 boxcoords[2][0] = lmpi.zlo;
                 boxcoords[2][1] = lmpi.zhi;
-	vector<vector<vector<double>>> P2localhere = localP2(boxcoords, lmpi.ai, lmpi.ani, coordinateindicies, resolutions);
-	cout << "localP2 specified: ";
-                for (int ii=0; ii <P2localhere.size(); ii++){
-                        for (int jj=0; jj < P2localhere[ii].size(); jj++){
-                                for (int kk=0; kk < P2localhere[ii][jj].size(); kk++){
-                                        cout << P2localhere[ii][jj][kk] << " ii " << ii << " jj " << jj << " kk " << kk << endl;
-                                }
-                        }
-                }
-		vector <int> xyzcoordinates = {0,1,2};
-		vector<vector<vector<double>>> P2localxyzhere = localP2(boxcoords, lmpi.ai, lmpi.ani, xyzcoordinates, resolutions);
-                double crystallinityhere = calculatecrystallinity(P2localxyzhere);
-		double P2here = calculateP2( boxcoords,lmpi.ai, lmpi.ani);
+	//vector<vector<vector<double>>> P2localhere = localP2(boxcoords, lmpi.ai, lmpi.ani, coordinateindicies, resolutions);
+	//cout << "localP2 specified: ";
+        //        for (int ii=0; ii <P2localhere.size(); ii++){
+        //                for (int jj=0; jj < P2localhere[ii].size(); jj++){
+        //                        for (int kk=0; kk < P2localhere[ii][jj].size(); kk++){
+        //                                cout << P2localhere[ii][jj][kk] << " ii " << ii << " jj " << jj << " kk " << kk << endl;
+        //                       }
+        //                }
+        //        }
+		//vector <int> xyzcoordinates = {0,1,2};
+		//vector<vector<vector<double>>> P2localxyzhere = localP2(boxcoords, lmpi.ai, lmpi.ani, xyzcoordinates, resolutions);
+                //double crystallinityhere = calculatecrystallinity(P2localxyzhere);
+		cout << "going to calculateP2" << endl;
+		double P2here = calculateP2( boxcoords,lmpi.ai, anglesinfo);
 		InfoLmpsData info;
 		
-		info.crystallinities = crystallinityhere;
+		//info.crystallinities = crystallinityhere;
         	info.orientationP2 = P2here;
-        	info.localP2 = P2localhere;
+        	//info.localP2 = P2localhere;
 	return info;
 		
 	
@@ -1520,8 +1693,12 @@ int main(){
 	//InfoLmpsData info = calcP2CrystandlocalLammpsData("../PEsemicrystalline/longermatch/PEcryst201EMClongrmrinfdabready.data", resolutions,  11078, coordinateindicies);
 	//InfoLmpsTraj info = calcP2CrystandlocalLammpstrajdata("PEmeltPolyHDPE10_66_smallerinboxcen.data","meltcrystalizing_10_66_Poly_smaller.lammpstrj", resolutions, 91670, 688410, coordinateindices,outfileorder,4);
 	//vector <double> crystallinities = calcCrystallinityLammpstrajdata("PEcryst201odbadready.data", "../PEsemicrystalline/fromhen2lessdensemiddle/chainsrem/PEsetrmrsim.lammpstraj", resolutions, 11078, 834372,5);
-	 double crystallinity = calcCrystallinityLammpsData("p613CrystStart.data", resolutions, 600676);
-	 cout << "crystallinity " << crystallinity << endl;
+	 //double crystallinity = calcCrystallinityLammpsData("p613CrystStart.data", resolutions, 600676);
+	vector <int> relAngleTypes = {6};
+	InfoLmpsData info = calcP2CrystandlocalLammpsData("p613CrystStart.data", resolutions, 600676, coordinateindices, relAngleTypes);
+	cout << " P2 " << info.orientationP2 << endl;
+	//double crystallinity = EffcalcCrystallinityLammpsData("p613CrystStart.data", resolutions 600676); 
+	//cout << "crystallinity " << crystallinity << endl;
 	//double crystallinity = calcCrystallinityLammpsData("PEcryst201odbadready.data", resolutions, 11078);
 	
 	
