@@ -242,14 +242,18 @@ Lmpsabainfo read_finalstructwithatombondangleinfo(string filename, int nlines)
                 }
 	}
 	if (lineatom){
-        	//cout << "lineatom true" << endl;
+        	//cout << "lineatom true " << line << endl;
                         if (vec_line.size() >5 ){
 				countatoms++;
                                 nindex = stoi(vec_line[0]) - 1;
                                 ai.atomnumber[nindex] = nindex+1;
+				
                                 //cout << "Atomnumber: " << ai.atomnumber[nindex] << endl;
+				
                                 ai.atomtype[nindex] = stoi(vec_line[2]);
+				
                                 //cout << "Atomtype: " << ai.atomtype[nindex] << endl;
+				
                                 lmpi.molecule[nindex] = stoi(vec_line[1]);
                                 ai.xcoords[nindex] = atof (vec_line[3].c_str());
                                 ai.ycoords[nindex] = atof (vec_line[4].c_str());
@@ -268,13 +272,14 @@ Lmpsabainfo read_finalstructwithatombondangleinfo(string filename, int nlines)
                                 ai.xi[nindex] = 0;
                                 ai.yi[nindex] = 0;
                                 ai.zi[nindex] = 0;
+				}
                                 if (countatoms >= natoms){
 					//cout << "looked at all atoms" << endl;
                                         lineatom = false;
 
                                 }
 
-                        }
+                        
                     }
                 }
 
@@ -509,11 +514,10 @@ auto lookatanglescostheta(Angleinfo& anglesinfo, Atominfo& atomsinfo,  double bo
 				//cout << "i" << i << " j " << j << " angles " << angles << endl;
 				
 				atomi1 = anglesinfo.anglefirst[i] - 1;
-				atomi2 = anglesinfo.anglesecond[i] -1;
 				atomi3 = anglesinfo.anglethird[i] -1;
 				atomj1 = anglesinfo.anglefirst[j] - 1;
-				atomj2 = anglesinfo.anglesecond[j] -1;
 				atomj3 = anglesinfo.anglethird[j] - 1;
+				//cout << "atomi1 " << atomi1 +1 << " atomi3 " << atomi3 + 1 << " atomj1 " << atomj1 << " atomj3 " << atomj3 << endl;
 				
 				atomi1coords[0] = xcoords[atomi1];
 				atomi1coords[1] = ycoords[atomi1];
@@ -540,6 +544,11 @@ auto lookatanglescostheta(Angleinfo& anglesinfo, Atominfo& atomsinfo,  double bo
 				dists1x = atomi1coords[0] - atomi3coords[0];
 				dists1y = atomi1coords[1] - atomi3coords[1];
 				dists1z = atomi1coords[2] - atomi3coords[2];
+				//cout << "atomi1coords[0] " << atomi1coords[0] << " atomi3coords[0] " << atomi3coords[0] << endl;
+				
+				//cout << "atomi1coords[1] " << atomi1coords[1] << " atomi3coords[1] " << atomi3coords[1] << endl;
+				
+				//cout << "atomi1coords[2] " << atomi1coords[2] << " atomi3coords[2] " << atomi3coords[2] << endl;
 				while (dists1x > boxlenx*0.5){
 					dists1x = dists1x - boxlenx;
 				}
@@ -563,6 +572,12 @@ auto lookatanglescostheta(Angleinfo& anglesinfo, Atominfo& atomsinfo,  double bo
 				dists2y = atomj1coords[1] - atomj3coords[1];
 				dists2z = atomj1coords[2] - atomj3coords[2];
 
+				//cout << "atomj1coords[0] " << atomj1coords[0] << " atomj3coords[0] " << atomj3coords[0] << endl;
+				
+				//cout << "atomj1coords[1] " << atomj1coords[1] << " atomj3coords[1] " << atomj3coords[1] << endl;
+				
+				//cout << "atomj1coords[2] " << atomj1coords[2] << " atomj3coords[2] " << atomj3coords[2] << endl;
+
 				while (dists2x > boxlenx*0.5){
 					dists2x = dists2x - boxlenx;
 				}
@@ -582,6 +597,7 @@ auto lookatanglescostheta(Angleinfo& anglesinfo, Atominfo& atomsinfo,  double bo
 					dists2z = dists2z + boxlenz;
 				}
 
+				//cout << "dists2x " << dists2x << " dists2y " << dists2y << " dists2z " << dists2z << endl;
 
 				//cout << " boxlenx " << boxlenx << " boxleny " << boxleny << " boxlenz " << boxlenz << endl;
 				//cout << " pbc x dist " << dists[0] << " pbc y dist " << dists[1] << " pbc z dist " << dists[2] << endl;
@@ -600,11 +616,11 @@ auto lookatanglescostheta(Angleinfo& anglesinfo, Atominfo& atomsinfo,  double bo
 				costhetaij = 0;
 
 				for (int ii=0;ii<3;ii++){
-					cout << " ii " << i << " vi[ii] " << vi[ii] << " vj[ii] " << vj[ii] << endl;
+					//cout << " ii " << i << " vi[ii] " << vi[ii] << " vj[ii] " << vj[ii] << endl;
 					costhetaij = costhetaij + vi[ii]*vj[ii];
 				}
 				
-				cout << "costhetaij " << costhetaij << endl;
+				//cout << "costhetaij " << costhetaij << endl;
 				allcosthetaijsqrd.push_back((pow(costhetaij,2)));
 				count++;
 				
@@ -1369,32 +1385,90 @@ vector <double> calcCrystallinityLammpstrajdata(string lammpsdatafile, string la
 
 }
 
-InfoLmpsData calcP2CrystandlocalLammpsData(string lammpsdatafile, double resolutions [3], int nlinesdata, vector <int> coordinateindicies, vector <int> relAngleTypes){
+vector <vector <int>> recursiveBackbone(vector <vector <int>> &allpaths, vector <int> &path, int &backboneBonds, vector <vector <int>> & graph, vector <bool> &visited){
+	int u = path.back();
+	
+	for (int v: graph[u]){
+		
+		if (!visited[v] && v > u){
+			
+
+			path.push_back(v);
+			visited[v] = true;
+
+			if (path.size() < backboneBonds +1){
+				recursiveBackbone(allpaths, path, backboneBonds, graph, visited);
+			}
+			else if (path.size() == backboneBonds +1){
+				allpaths.push_back(path);
+				
+			}
+		}
+		
+	}
+	//cout << "" << endl;
+	return allpaths;
+}
+
+
+InfoLmpsData calcP2CrystandlocalLammpsData(string lammpsdatafile, double resolutions [3], int nlinesdata, vector <int> coordinateindicies, int backboneBonds, vector <int> backboneAtypes){
 	Lmpsabainfo lmpi = read_finalstructwithatombondangleinfo(lammpsdatafile, nlinesdata);
 	cout << "read lammps data file " << lammpsdatafile << endl;
 	Angleinfo anglesinfo;
-	anglesinfo.nangles = 0;
-	int atype;
-	for (int i = 0; i < lmpi.ani.nangles; i++){
-		atype = lmpi.ani.angletype[i];
-		if (find(relAngleTypes.begin(), relAngleTypes.end(), atype) != relAngleTypes.end()){
-			anglesinfo.nangles++;
-			anglesinfo.anglenumber.push_back(anglesinfo.nangles);
-			anglesinfo.angletype.push_back(atype);
-			anglesinfo.anglefirst.push_back(lmpi.ani.anglefirst[i]);
-			anglesinfo.anglesecond.push_back(lmpi.ani.anglesecond[i]);
-			anglesinfo.anglethird.push_back(lmpi.ani.anglethird[i]);
+	vector <vector <int>> graph (lmpi.ai.natoms);
+	int atom1;
+	int atom2;
+	int atype1;
+	int atype2;
+	for (int i = 0; i < lmpi.bi.nbonds; i++){
+		
+		atom1 = lmpi.bi.bondfirst[i]-1;
+		atype1 = lmpi.ai.atomtype[atom1];
+		
+		atom2 = lmpi.bi.bondsecond[i]-1;
+		atype2 = lmpi.ai.atomtype[atom2];
+		if (find(backboneAtypes.begin(), backboneAtypes.end(), atype1) != backboneAtypes.end() && find(backboneAtypes.begin(), backboneAtypes.end(), atype2) != backboneAtypes.end()){
+			graph[atom1].push_back(atom2);
+			graph[atom2].push_back(atom1);
+		
 		}
 	}
+	cout << "made graph " << endl;
+	anglesinfo.nangles = 0;
+	for (int i = 0; i < lmpi.ai.natoms; i++){
+		vector <vector <int>> allpaths;
+		vector <int> start = {i};
+		vector <bool> visited (lmpi.ai.natoms, false);
+		//if (i == 0){
+		//cout << "start " << i << endl;
+		//}
+		allpaths = recursiveBackbone(allpaths, start, backboneBonds, graph, visited);
+		for (int j = 0; j < allpaths.size(); j++){
+			anglesinfo.nangles++;
+			atom1 = allpaths[j][0]+1;
+			atom2 = allpaths[j][6]+1;
+			if (find(anglesinfo.anglefirst.begin(), anglesinfo.anglefirst.end(), atom1) == anglesinfo.anglefirst.end() && find(anglesinfo.anglethird.begin(), anglesinfo.anglethird.end(), atom2) == anglesinfo.anglethird.end()){
+				anglesinfo.anglefirst.push_back(atom1);
+				anglesinfo.anglethird.push_back(atom2);
+				//if (i == 0){
+				//	cout << " atom1 " << anglesinfo.anglefirst.back() << " atom2 " << anglesinfo.anglethird.back() ;
+				//}
+			}
+			
+
+		}
+	}
+	//cout << "atom1[0] " << anglesinfo.anglefirst[0] << " atom2[0] " << anglesinfo.anglethird[0]  << endl;
+
 
 
 	double boxcoords[3][2];
-                boxcoords[0][0] = lmpi.xlo;
-                boxcoords[0][1] = lmpi.xhi;
-                boxcoords[1][0] = lmpi.ylo;
-                boxcoords[1][1] = lmpi.yhi;
-                boxcoords[2][0] = lmpi.zlo;
-                boxcoords[2][1] = lmpi.zhi;
+	boxcoords[0][0] = lmpi.xlo;
+	boxcoords[0][1] = lmpi.xhi;
+	boxcoords[1][0] = lmpi.ylo;
+	boxcoords[1][1] = lmpi.yhi;
+	boxcoords[2][0] = lmpi.zlo;
+	boxcoords[2][1] = lmpi.zhi;
 	//vector<vector<vector<double>>> P2localhere = localP2(boxcoords, lmpi.ai, lmpi.ani, coordinateindicies, resolutions);
 	//cout << "localP2 specified: ";
         //        for (int ii=0; ii <P2localhere.size(); ii++){
@@ -1407,13 +1481,13 @@ InfoLmpsData calcP2CrystandlocalLammpsData(string lammpsdatafile, double resolut
 		//vector <int> xyzcoordinates = {0,1,2};
 		//vector<vector<vector<double>>> P2localxyzhere = localP2(boxcoords, lmpi.ai, lmpi.ani, xyzcoordinates, resolutions);
                 //double crystallinityhere = calculatecrystallinity(P2localxyzhere);
-		cout << "going to calculateP2" << endl;
-		double P2here = calculateP2( boxcoords,lmpi.ai, anglesinfo);
-		InfoLmpsData info;
-		
-		//info.crystallinities = crystallinityhere;
-        	info.orientationP2 = P2here;
-        	//info.localP2 = P2localhere;
+	cout << "going to calculateP2" << endl;
+	double P2here = calculateP2( boxcoords,lmpi.ai, anglesinfo);
+	InfoLmpsData info;
+	
+	//info.crystallinities = crystallinityhere;
+	info.orientationP2 = P2here;
+	//info.localP2 = P2localhere;
 	return info;
 		
 	
@@ -1694,8 +1768,9 @@ int main(){
 	//InfoLmpsTraj info = calcP2CrystandlocalLammpstrajdata("PEmeltPolyHDPE10_66_smallerinboxcen.data","meltcrystalizing_10_66_Poly_smaller.lammpstrj", resolutions, 91670, 688410, coordinateindices,outfileorder,4);
 	//vector <double> crystallinities = calcCrystallinityLammpstrajdata("PEcryst201odbadready.data", "../PEsemicrystalline/fromhen2lessdensemiddle/chainsrem/PEsetrmrsim.lammpstraj", resolutions, 11078, 834372,5);
 	 //double crystallinity = calcCrystallinityLammpsData("p613CrystStart.data", resolutions, 600676);
-	vector <int> relAngleTypes = {6};
-	InfoLmpsData info = calcP2CrystandlocalLammpsData("p613CrystStart.data", resolutions, 600676, coordinateindices, relAngleTypes);
+	int backboneBonds = 6;
+	vector <int> backboneAtypes {2,3};
+	InfoLmpsData info = calcP2CrystandlocalLammpsData("p613CrystStart.data", resolutions, 600676, coordinateindices, backboneBonds, backboneAtypes);
 	cout << " P2 " << info.orientationP2 << endl;
 	//double crystallinity = EffcalcCrystallinityLammpsData("p613CrystStart.data", resolutions 600676); 
 	//cout << "crystallinity " << crystallinity << endl;
