@@ -242,7 +242,9 @@ def setupInfiniteSystem(xyzfile, Rx, Ry, Rz):
     #find unit vector of new c axis
     zoffset = np.cos(math.radians(diffangle))
     xoffset = -np.sin(math.radians(diffangle))
-    #print("xoffset", xoffset, "zoffset", zoffset)
+
+    print("xoffset", xoffset, "zoffset", zoffset) 
+    print("unit 001 in monoclinic", "x", xoffset, "y", 0, "z", zoffset) 
     rcoords = np.zeros((9,3))
     rcoords[:,0] = [float(i) for i in "-0.0727 -0.0765 -0.1021 -0.3087 -0.1146 -0.1044 0.2775 0.0872 0.1026".split()]
     rcoords[:,1] = [float(i) for i in "0.2291 0.1592 0.1602 0.0589 0.0928 0.0854 0.0797 0.1156 0.1221".split()]
@@ -738,7 +740,7 @@ def readxyz(filename):
 
     return atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi
 
-def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
+def writeMoleculesinCrystalNoCons(xyzfile, moleculeClist, Rx, Ry, Rz):
     shownCs = []
     maxC = 0
     spaceC = [5 if m%2 == 0 else 5 for m in moleculeClist]
@@ -786,8 +788,9 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     diffxmin = xposmin - xnegmin
     symmetries = np.array([[1, 1, 1], [-1, -1, -1], [1, -1 + 0.5, 1 + 0.5], [-1, 1 + 0.5, -1 + 0.5]])
     symmetriesM = np.array([[1, 1, 1], [-1, -1, -1], [1, 1, 1], [-1, -1, -1]])
-    symmetriesA = np.array(
-        [[0.5, spacing, 0], [diffxmin, 0.5 - spacing, 0.5], [0, 0.5 + spacing, 0], [0.5 + diffxmin, 1 - spacing, 0.5]])
+    symmetriesA = np.array([[0.5,0,0], [0, 0.5, 1], [0, 0.5, 0], [0.5, 1, 1]])
+    #symmetriesNewM = np.array([[1,1,1],[-1,-1,-1],[1,-1,1],[-1,1,-1]])
+   
     unitcell = np.zeros((len(symmetries) * len(rcoords), 3))
     ucount = 0
     for s in range(len(symmetries)):
@@ -816,9 +819,14 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     unitcell[18,:] = list(unitcell[19,:])
     unitcell[19,:] = mid
     #print("unitcell", unitcell)
-    ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
-    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b, unitcell[10][2]*c], [unitcell[18][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b, unitcell[28][2]*c], [unitcell[0,0]*a, (unitcell[0,1]+2)*b, unitcell[0,2]*c]]
+    ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c+0.5], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
+    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.8, unitcell[10][2]*c], [unitcell[19][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+1, unitcell[28][2]*c], [unitcell[0,0]*a, (unitcell[0,1]+1)*b, unitcell[0,2]*c]]
+
+    #ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c+0.5], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
+    #ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.8, unitcell[10][2]*c], [unitcell[19][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+1, unitcell[28][2]*c], [unitcell[0,0]*a, (unitcell[0,1]+1)*b, unitcell[0,2]*c]]
     midpoints = []
+
+    
     for i in range(len(ends1s)):
         # print("end1", ends1s[i], "end2", ends2s[i])
         xdist = (ends1s[i][0] - ends2s[i][0]) * a
@@ -827,9 +835,9 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
         dist = (xdist ** 2 + ydist ** 2 + zdist ** 2) ** 0.5
     for i in range(len(ends1s)):
         if i % 2 == 0:
-            midpoints.append([(ends1s[i][0] + ends2s[i][0]) / 2, (ends1s[i][1] + ends2s[i][1]) / 2,(ends1s[i][2] + ends2s[i][2]) / 2 + c])
+            midpoints.append([(ends1s[i][0] + ends2s[i][0]) / 2, (ends1s[i][1] + ends2s[i][1]) / 2,(ends1s[i][2] + ends2s[i][2]) / 2 + c/2])
         else:
-            midpoints.append([(ends1s[i][0] + ends2s[i][0]) / 2, (ends1s[i][1] + ends2s[i][1]) / 2,  (ends1s[i][2] + ends2s[i][2]) / 2 - c])
+            midpoints.append([(ends1s[i][0] + ends2s[i][0]) / 2, (ends1s[i][1] + ends2s[i][1]) / 2,  (ends1s[i][2] + ends2s[i][2]) / 2 - c/2])
 
     # connection 1
     # parabola in z y
@@ -872,7 +880,8 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     connectionsR3 = []
     connectionsR4 = []
     npoints = [8, 6, 8, 6]
-    spacing = [1.54, 1.54, 1.54, 1.54]
+    spacing = [1.4, 1.4, 1.4, 1.4, 1.54]
+    
     for i in range(4):
         conx, cony, conz, sidex, sidey, sidez = linear2parabolaConnect(Aline[i], Bline[i], Aparabola1[i], Hparabola1[i], Kparabola1[i], Aparabola2[i], Hparabola2[i], Kparabola2[i], ends1s[i], ends2s[i], midpoints[i], spacing[i])
         sidec = 0
@@ -895,10 +904,12 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
             #vars()["connections" + str(i+1)].append([conx[j], cony[j], conz[j]])
 
     pend1 = list(ends1s[3])
-    pend2 = [ends1s[3][0]+2*a, ends1s[3][1], ends1s[3][2]]
+    pend2 = [ends1s[3][0]+a, ends1s[3][1], ends1s[3][2]]
+
+    
     pla = (pend2[1] - pend1[1]) / (pend2[0] - pend1[0])
     plb = pend2[1] - pla * pend2[0]
-    pmid = [(pend1[0] + pend2[0]) / 2, (pend1[1] + pend2[1]) / 2, (pend1[2] + pend2[2]) / 2 - c]
+    pmid = [(pend1[0] + pend2[0]) / 2, (pend1[1] + pend2[1]) / 2, (pend1[2] + pend2[2]) / 2 - c/2]
     pendh1 = pmid[0]
     pendh2 = pmid[0]
     pendk1 = pmid[2]
@@ -909,11 +920,12 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2,
                                                                            pendh2, pendk2, pend1, pend2, pmid, 1.6)
 
-    p2end1 = [unitcell[1][0] * a, unitcell[1][1] * b, unitcell[1][2] * c]
-    p2end2 = [unitcell[0][0] * a + 2 * a, p2end1[1], p2end1[2]]
+
+    p2end1 = [unitcell[0][0]*a , unitcell[0][1]*b, unitcell[0][2]*c]
+    p2end2 = [unitcell[0][0]*a + a, p2end1[1]-0.5, p2end1[2]]
     pla = (p2end2[1] - p2end1[1]) / (p2end2[0] - p2end1[0])
     plb = p2end2[1] - pla * p2end2[0]
-    pmid = [(p2end1[0] + p2end2[0]) / 2, (p2end1[1] + p2end2[1]) / 2, (p2end1[2] + p2end2[2]) / 2 - c]
+    pmid = [(p2end1[0] + p2end2[0]) / 2, (p2end1[1] + p2end2[1]) / 2, (p2end1[2] + p2end2[2]) / 2 - c/2]
     pendh1 = pmid[0]
     pendh2 = pmid[0]
     pendk1 = pmid[2]
@@ -921,7 +933,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
 
     penda1 = (p2end1[2] - pendk1) / ((p2end1[0] - pendh1) ** 2)
     penda2 = (p2end2[2] - pendk2) / ((p2end2[0] - pendh2) ** 2)
-    p2conx, p2cony, p2conz, p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1,
+    p2conx, p2cony, p2conz, p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect2(pla, plb, penda1, pendh1, pendk1,
                                                                                  penda2, pendh2, pendk2, p2end1, p2end2,
                                                                                  pmid, 1.6)
     pconnections1 = []
@@ -941,7 +953,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     cside = 0
     for i in range(len(p2conx)):
         pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
-        if i % 2 == 0:
+        if i % 2 == 1:
             pconnections2.append([p2sidex[cside], p2sidey[cside], p2sidez[cside]])
             cside += 1
     #for i in range(len(p2conx)//2, len(p2conx)):
@@ -972,8 +984,8 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
     diffxmin = xposmin - xnegmin
     symmetries = np.array([[1, 1, 1], [-1, -1, -1], [1, -1 + 0.5, 1 + 0.5], [-1, 1 + 0.5, -1 + 0.5]])
     symmetriesM = np.array([[1, 1, 1], [-1, -1, -1], [1, 1, 1], [-1, -1, -1]])
-    symmetriesA = np.array(
-        [[1, spacing, 0], [diffxmin, 1 - spacing, 1], [0, 1 + spacing, 0], [1 + diffxmin, 2 - spacing, 1]])
+    symmetriesA = np.array([[0.5,0,0], [0, 0.5, 1], [0, 0.5, 0], [0.5, 1, 1]]) 
+    
     unitcell = np.zeros((len(symmetries) * len(rcoords), 3))
     ucount = 0
     sortedInds0 = [1, 0, 2, 4, 3, 5, 7, 6, 8]
@@ -1027,6 +1039,33 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
         unitcellReverse[27+i,:] = list(unitcell[i,:])
     """
     srclist = [2, 1, 0, 3]
+    avgxS0 = np.mean(unitcell[0:9,0])*a
+    avgyS0 = np.mean(unitcell[0:9,1])*b
+    avgzS0 = np.mean(unitcell[0:9,2])*c
+    
+    avgxS1 = np.mean(unitcell[9:18,0])*a
+    avgyS1 = np.mean(unitcell[9:18,1])*b
+    avgzS1 = np.mean(unitcell[9:18,2])*c
+    
+    avgxS2 = np.mean(unitcell[18:27,0])*a
+    avgyS2 = np.mean(unitcell[18:27,1])*b
+    avgzS2 = np.mean(unitcell[18:27,2])*c
+    
+    avgxS3 = np.mean(unitcell[27:36,0])*a
+    avgyS3 = np.mean(unitcell[27:36,1])*b
+    avgzS3 = np.mean(unitcell[27:36,2])*c
+
+    dist01 = ((avgxS0 - avgxS1)**2 + (avgyS0 - avgyS1)**2 + (avgzS0 - avgzS1)**2)**0.5
+    dist12 = ((avgxS2 - avgxS1)**2 + (avgyS2 - avgyS1)**2 + (avgzS2 - avgzS1)**2)**0.5
+    dist23 = ((avgxS2 - avgxS3)**2 + (avgyS2 - avgyS3)**2 + (avgzS2 - avgzS3)**2)**0.5
+    print(avgxS0, avgyS0, avgzS0)
+    print(avgxS1, avgyS1, avgzS1)
+    print(avgxS2, avgyS2, avgzS2)
+    print(avgxS3, avgyS3, avgzS3)
+    print("dist01", dist01, "dist12", dist12, "dist23", dist23)
+
+
+
     for i in range(Rx):
         basex = i*a
         if i%2 == 0:
@@ -1084,9 +1123,577 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                             ty = y
                             tz = z*zoffset
                             if not alldone and madded < moleculeClist[moli] and spacecount >= minspace and started: 
-                                atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                atomsinfo.append([acount, 1+s, 1, tx, ty, tz])
                                 acount = acount + 1
                                 madded  = madded + 1
+                                #print("madded", madded)
+                                #print("spacecount", spacecount)
+                            elif (madded == 0 and spacecount < minspace):
+                                if spacecount == 0:
+                                    if ci > 0:
+                                        spacecount = spacecount + 1
+                                else:
+                                    spacecount = spacecount + 1
+                                #print("tx", tx, "ty", ty, "tz", tz)
+                               
+                            if not alldone and madded == moleculeClist[moli]:
+                                moli = moli + 1
+                                print("moli", moli)
+                                madded = 0
+                                spacecount = 0
+                                if moli == len(moleculeClist):
+                                    alldone = True
+                                minspace = 5 +nc%2
+                                started = False
+                                #minspace = 5 
+                                #print("minspace", minspace)
+                            count = count + 1
+                            
+
+                    if reverse == False:
+                        if k == Rzlist[-1] and s % 2 == 0:
+                            nc = nc +1
+                            for ii in range(len(vars()["connections" + str(s + 1)])):
+                                x = basex + vars()["connections" + str(s + 1)][ii][0]
+                                y = basey + vars()["connections" + str(s + 1)][ii][1]
+                                z = basez + vars()["connections" + str(s + 1)][ii][2]
+                                tx = x + z * xoffset
+                                ty = y
+                                tz = z * zoffset
+                                #if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    #atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
+                                    #acount = acount + 1
+                                    #madded = madded +1
+                                #count = count + 1
+                        elif k == Rzlist[-1] and s % 2 == 1 and (s != 3 or j < Ry - 1):
+                            for ii in range(len(vars()["connections" + str(s + 1)])):
+                                x = basex + vars()["connections" + str(s + 1)][ii][0]
+                                y = basey + vars()["connections" + str(s + 1)][ii][1]
+                                z = vars()["connections" + str(s + 1)][ii][2]
+                                tx = x + z * xoffset
+                                ty = y
+                                tz = z * zoffset
+                                #if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    #atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
+                                    #count = acount + 1
+                                    #madded = madded + 1
+                                #count = count + 1
+                        elif k == Rzlist[-1] and s == 3 and j == Ry - 1 and i % 2 == 0:
+                            nc = nc +1
+                            for ii in range(len(pconnections1)):
+                                x = basex + pconnections1[ii][0]
+                                y = basey + pconnections1[ii][1]
+                                z = pconnections1[ii][2]
+                                tx = x + z * xoffset
+                                ty = y
+                                tz = z * zoffset
+                                #if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    #atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
+                                    #acount = acount + 1
+                                    #madded = madded + 1
+                                #count = count + 1
+
+                        elif k == Rzlist[-1] and s == 3 and j == Ry - 1 and i % 2 == 1:
+
+                            for ii in range(len(pconnections2)):
+                                x = basex + pconnections2[ii][0]
+                                y = pconnections2[ii][1]
+                                z = pconnections2[ii][2]
+                                tx = x + z * xoffset
+                                ty = y
+                                tz = z * zoffset
+                                #if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    #atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
+                                    #acount = acount + 1
+                                    #madded = madded + 1
+                                #count = count + 1
+                        if not alldone and madded == moleculeClist[moli]:
+                            madded = 0
+
+                            moli = moli + 1
+                            print("moli", moli)
+                            if moli == len(moleculeClist):
+                                alldone = True
+                            #print("mol", mol)
+                        #print("acount", acount)
+                    
+                    else: 
+                        sr = srclist[s]
+                        #print("sr", sr)
+                        if k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==0:
+                            for ii in range(len(pconnections1)):
+                                x = basex + pconnections1[ii][0]
+                                y = basey + pconnections1[ii][1]
+                                z = pconnections1[ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                #if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    #atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
+                                    #acount = acount + 1
+                                    #madded = madded + 1
+                                #count = count + 1
+
+                        elif k == Rzlist[-1] and s==3 and j == Rylist[-1] and i%2 ==1:
+                            nc = nc + 1
+                            for ii in range(len(pconnections2)):
+                                x = basex  + pconnections2[ii][0]
+                                y = pconnections2[ii][1]
+                                z = pconnections2[ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                #if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    #atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
+                                    #acount = acount + 1
+                                    #madded = madded + 1
+                                #count = count + 1
+                        elif k == Rzlist[-1] and sr%2 == 0:
+                            nc = nc + 1
+                            for ii in range(len(vars()["connectionsR"+str(sr+1)])):
+                                x = basex + vars()["connectionsR" + str(sr+1)][ii][0]
+                                y = basey + vars()["connectionsR" + str(sr+1)][ii][1]
+                                z = basez + vars()["connectionsR" + str(sr+1)][ii][2]
+                                tx = x + z*xoffset
+                                ty = y 
+                                tz = z*zoffset
+                                #if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    #atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
+                                    #acount = acount + 1
+                                    #madded = madded + 1
+                                #count = count + 1
+                        elif k == Rzlist[-1] and sr%2 ==1 and (sr != 3 or j != Rylist[-1]):
+                            
+                            for ii in range(len(vars()["connectionsR"+str(sr+1)])):
+                                if sr != 3:
+                                    x = basex + vars()["connectionsR" + str(sr+1)][ii][0]
+                                    y = basey + vars()["connectionsR" + str(sr+1)][ii][1]
+                                    z = vars()["connectionsR" + str(sr+1)][ii][2]
+                                elif sr == 3:
+                                    x = basex + vars()["connectionsR" + str(sr+1)][ii][0]
+                                    y = basey + vars()["connectionsR" + str(sr+1)][ii][1] - b
+                                    z = vars()["connectionsR" + str(sr+1)][ii][2]
+                                tx = x + z*xoffset
+                                ty = y
+                                tz = z*zoffset
+                                #if not alldone and madded < moleculeClist[moli] and madded > 0:
+                                    #atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
+                                    #acount = acount + 1
+                                    #madded = madded + 1
+                                #count = count + 1
+                        if not alldone and madded == moleculeClist[moli]:
+                            madded = 0
+                            moli = moli + 1
+                            print("moli", moli)
+                            if moli == len(moleculeClist):
+                                alldone = True
+                            spacecount = 0
+                            minspace = 5 +nc%2
+                            started = False
+
+    if count < len(countRef) or acount != nBeads+1:
+        print("ERROR: NOT ALL WERE SHOWN")
+        print("count", count, "len(shownCs)", len(shownCs))
+        print("acount", acount, "nBeads+1", nBeads+1)
+    atomsinfo = np.array(atomsinfo)
+    writexyz(xyzfile, atomsinfo)
+    xlo = min(atomsinfo[:, 3]) - 5
+    xhi = max(atomsinfo[:, 3]) + 5
+    ylo = min(atomsinfo[:, 4]) - 5
+    yhi = max(atomsinfo[:, 4]) + 5
+    zlo = min(atomsinfo[:, 5]) - 5
+    zhi = max(atomsinfo[:, 5]) + 5
+    return atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi
+
+
+def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
+    shownCs = []
+    maxC = 0
+    spaceC = [5 if m%2 == 0 else 5 for m in moleculeClist]
+    nBeads = sum(moleculeClist)
+    print("nBeads", nBeads)
+    nMols  = len(moleculeClist)
+    print("nMols", nMols)
+    
+    countRef = np.ones(nBeads + sum(spaceC[0:len(spaceC)-1]))
+
+    print("len(countRef)", len(countRef))
+    #from moleculeClist
+    for mi,m in enumerate(moleculeClist):
+        assert (m-2)%3 == 0
+        clist = list(range(maxC, maxC + m))
+        shownCs.extend(clist)
+        for i in range(spaceC[mi]):
+            if mi < nMols -1:
+                countRef[maxC+m+i] = 0
+        maxC = maxC + m + spaceC[mi]
+    
+    #print("shownCs", shownCs)
+
+
+    atomsinfo = []
+    a = 6.63
+    b = 20.78
+    c = 6.50
+    atype = [1, 1, 1, 1, 1, 1, 1, 1, 1]
+    beta = 99.5
+    diffangle = 99.5 - 90
+    # find unit vector of new c axis
+    zoffset = np.cos(math.radians(diffangle))
+    xoffset = -np.sin(math.radians(diffangle))
+    rcoords = np.zeros((9, 3))
+    rcoords[:, 0] = [float(i) for i in "-0.0727 -0.0765 -0.1021 -0.3087 -0.1146 -0.1044 0.2775 0.0872 0.1026".split()]
+    rcoords[:, 1] = [float(i) for i in "0.2291 0.1592 0.1602 0.0589 0.0928 0.0854 0.0797 0.1156 0.1221".split()]
+    rcoords[:, 2] = [float(i) for i in "0.2004 0.2788 0.5098 0.4941 0.6057 0.8428 0.9260 0.9730 1.2109".split()]
+    widthy = max(rcoords[:, 1]) - min(rcoords[:, 1])
+    widthx = max(rcoords[:, 0]) - min(rcoords[:, 0])
+    spacing = widthy / 2
+
+    xnegmin = min(-rcoords[:, 0])
+    xposmin = min(rcoords[:, 0])
+    diffxmin = xposmin - xnegmin
+    symmetries = np.array([[1, 1, 1], [-1, -1, -1], [1, -1 + 0.5, 1 + 0.5], [-1, 1 + 0.5, -1 + 0.5]])
+    symmetriesM = np.array([[1, 1, 1], [-1, -1, -1], [1, 1, 1], [-1, -1, -1]])
+    symmetriesA = np.array([[0.5,0,0], [0, 0.5, 1], [0, 0.5, 0], [0.5, 1, 1]])
+    #symmetriesNewM = np.array([[1,1,1],[-1,-1,-1],[1,-1,1],[-1,1,-1]])
+   
+    unitcell = np.zeros((len(symmetries) * len(rcoords), 3))
+    ucount = 0
+    for s in range(len(symmetries)):
+        #print("symmetries", symmetries[s])
+        for ci in range(len(rcoords)):
+            unitcell[ucount, 1] = rcoords[ci, 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
+            unitcell[ucount, 2] = (rcoords[ci, 2] * symmetriesM[s, 2] + symmetriesA[s, 2])
+            unitcell[ucount, 0] = rcoords[ci, 0] * symmetriesM[s, 0] + symmetriesA[s, 0]
+            ucount += 1
+    # calculate distances between ends:
+    # pairs in unit cells
+    #print("unitcell before", unitcell)
+
+    #change unit cell order to mesh with order of beads
+    first = list(unitcell[0,:])
+    #print("first", first)
+    #print("second", unitcell[1])
+    unitcell[0,:] = list(unitcell[1])
+    unitcell[1,:] = first
+    # swich another unit cell
+    #switch  = list(unitcell[11])
+    #unitcell[11] = list(unitcell[12])
+    #unitcell[12] = switch
+
+    mid = list(unitcell[18,:])
+    unitcell[18,:] = list(unitcell[19,:])
+    unitcell[19,:] = mid
+    #print("unitcell", unitcell)
+    ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c+0.5], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
+    ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.8, unitcell[10][2]*c], [unitcell[19][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+1, unitcell[28][2]*c], [unitcell[0,0]*a, (unitcell[0,1]+1)*b, unitcell[0,2]*c]]
+
+    #ends1s = [[unitcell[8][0]*a, unitcell[8][1]*b, unitcell[8][2]*c], [unitcell[17][0]*a, unitcell[17][1]*b, unitcell[17][2]*c], [unitcell[26][0]*a, unitcell[26][1]*b, unitcell[26][2]*c+0.5], [unitcell[35][0]*a, unitcell[35][1]*b, unitcell[35][2]*c]]
+    #ends2s = [[unitcell[10][0]*a, unitcell[10][1]*b+0.8, unitcell[10][2]*c], [unitcell[19][0], unitcell[18][1]*b, unitcell[18][2]*c], [unitcell[28][0]*a, unitcell[28][1]*b+1, unitcell[28][2]*c], [unitcell[0,0]*a, (unitcell[0,1]+1)*b, unitcell[0,2]*c]]
+    midpoints = []
+
+    
+    for i in range(len(ends1s)):
+        # print("end1", ends1s[i], "end2", ends2s[i])
+        xdist = (ends1s[i][0] - ends2s[i][0]) * a
+        ydist = (ends1s[i][1] - ends2s[i][1]) * b
+        zdist = (ends1s[i][2] - ends2s[i][2]) * c
+        dist = (xdist ** 2 + ydist ** 2 + zdist ** 2) ** 0.5
+    for i in range(len(ends1s)):
+        if i % 2 == 0:
+            midpoints.append([(ends1s[i][0] + ends2s[i][0]) / 2, (ends1s[i][1] + ends2s[i][1]) / 2,(ends1s[i][2] + ends2s[i][2]) / 2 + c/2])
+        else:
+            midpoints.append([(ends1s[i][0] + ends2s[i][0]) / 2, (ends1s[i][1] + ends2s[i][1]) / 2,  (ends1s[i][2] + ends2s[i][2]) / 2 - c/2])
+
+    # connection 1
+    # parabola in z y
+    # linear in x
+    Aparabola1 = []
+    Hparabola1 = []
+    Kparabola1 = []
+    Aparabola2 = []
+    Hparabola2 = []
+    Kparabola2 = []
+    Aline = []
+    Bline = []
+
+    for i in range(len(ends1s)):
+        #print(ends1s[i][1], midpoints[i][1], ends2s[i][1], ends1s[i][2], midpoints[i][2], ends2s[i][2])
+        ph1 = midpoints[i][1]
+        pk1 = midpoints[i][2]
+        pa1 = (ends1s[i][2] - pk1) / ((ends1s[i][1] - ph1) ** 2)
+        Aparabola1.append(pa1)
+        Hparabola1.append(ph1)
+        Kparabola1.append(pk1)
+        ph2 = midpoints[i][1]
+        pk2 = midpoints[i][2]
+        pa2 = (ends2s[i][2] - pk2) / ((ends2s[i][1] - ph2) ** 2)
+        Aparabola2.append(pa2)
+        Hparabola2.append(ph2)
+        Kparabola2.append(pk2)
+        la = (ends2s[i][1] - ends1s[i][1]) / (ends2s[i][0] - ends1s[i][0])
+        lb = ends2s[i][1] - la * ends2s[i][0]
+        # [la,lb] = np.polyfit([ends1s[i][1], ends2s[i][1]],[ends1s[i][0], ends2s[i][0]],1)
+        Aline.append(la)
+        Bline.append(lb)
+
+    connections1 = []
+    connections2 = []
+    connections3 = []
+    connections4 = []
+    connectionsR1 = []
+    connectionsR2 = []
+    connectionsR3 = []
+    connectionsR4 = []
+    npoints = [8, 6, 8, 6]
+    spacing = [1.4, 1.4, 1.4, 1.4, 1.54]
+    
+    for i in range(4):
+        conx, cony, conz, sidex, sidey, sidez = linear2parabolaConnect(Aline[i], Bline[i], Aparabola1[i], Hparabola1[i], Kparabola1[i], Aparabola2[i], Hparabola2[i], Kparabola2[i], ends1s[i], ends2s[i], midpoints[i], spacing[i])
+        sidec = 0
+        sidecR = len(sidex) -1
+        for j in range(len(conx)):
+            vars()["connections" + str(i + 1)].append([conx[j], cony[j], conz[j]])
+            if j % 2 == 0:
+                vars()["connections" + str(i + 1)].append([sidex[sidec], sidey[sidec], sidez[sidec]])
+                sidec += 1
+            jR = len(conx) -1 - j
+            vars()["connectionsR" + str(i+1)].append([conx[jR], cony[jR], conz[jR]])
+            if jR %2 == 0:
+                vars()["connectionsR" + str(i+1)].append([sidex[sidecR], sidey[sidecR], sidez[sidecR]])
+                sidecR = sidecR - 1
+        #for j in range(len(conx)//2, len(conx)):
+            #if j % 2 == 0:
+                #vars()["connections" + str(i+1)].append([sidex[sidec], sidey[sidec], sidez[sidec]])
+                #sidec +=1
+
+            #vars()["connections" + str(i+1)].append([conx[j], cony[j], conz[j]])
+
+    pend1 = list(ends1s[3])
+    pend2 = [ends1s[3][0]+a, ends1s[3][1], ends1s[3][2]]
+
+    
+    pla = (pend2[1] - pend1[1]) / (pend2[0] - pend1[0])
+    plb = pend2[1] - pla * pend2[0]
+    pmid = [(pend1[0] + pend2[0]) / 2, (pend1[1] + pend2[1]) / 2, (pend1[2] + pend2[2]) / 2 - c/2]
+    pendh1 = pmid[0]
+    pendh2 = pmid[0]
+    pendk1 = pmid[2]
+    pendk2 = pmid[2]
+
+    penda1 = (pend1[2] - pendk1) / ((pend1[0] - pendh1) ** 2)
+    penda2 = (pend2[2] - pendk2) / ((pend2[0] - pendh2) ** 2)
+    pconx, pcony, pconz, psidex, psidey, psidez = linear2parabolaXZConnect(pla, plb, penda1, pendh1, pendk1, penda2,
+                                                                           pendh2, pendk2, pend1, pend2, pmid, 1.6)
+
+
+    p2end1 = [unitcell[0][0]*a , unitcell[0][1]*b, unitcell[0][2]*c]
+    p2end2 = [unitcell[0][0]*a + a, p2end1[1]-0.5, p2end1[2]]
+    pla = (p2end2[1] - p2end1[1]) / (p2end2[0] - p2end1[0])
+    plb = p2end2[1] - pla * p2end2[0]
+    pmid = [(p2end1[0] + p2end2[0]) / 2, (p2end1[1] + p2end2[1]) / 2, (p2end1[2] + p2end2[2]) / 2 - c/2]
+    pendh1 = pmid[0]
+    pendh2 = pmid[0]
+    pendk1 = pmid[2]
+    pendk2 = pmid[2]
+
+    penda1 = (p2end1[2] - pendk1) / ((p2end1[0] - pendh1) ** 2)
+    penda2 = (p2end2[2] - pendk2) / ((p2end2[0] - pendh2) ** 2)
+    p2conx, p2cony, p2conz, p2sidex, p2sidey, p2sidez = linear2parabolaXZConnect2(pla, plb, penda1, pendh1, pendk1,
+                                                                                 penda2, pendh2, pendk2, p2end1, p2end2,
+                                                                                 pmid, 1.6)
+    pconnections1 = []
+    cside = 0
+    for i in range(len(pconx)):
+        pconnections1.append([pconx[i], pcony[i], pconz[i]])
+        if i % 2 == 0:
+            pconnections1.append([psidex[cside], psidey[cside], psidez[cside]])
+            cside += 1
+    #for i in range(len(pconx)//2, len(pconx)):
+        #if i % 2 == 0:
+            #pconnections1.append([psidex[cside], psidey[cside], psidez[cside]])
+            #cside += 1
+        #pconnections1.append([pconx[i], pcony[i], pconz[i]])
+
+    pconnections2 = []
+    cside = 0
+    for i in range(len(p2conx)):
+        pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
+        if i % 2 == 1:
+            pconnections2.append([p2sidex[cside], p2sidey[cside], p2sidez[cside]])
+            cside += 1
+    #for i in range(len(p2conx)//2, len(p2conx)):
+        #if i % 2 == 0:
+            #pconnections2.append([p2sidex[cside], p2sidey[cside], p2sidez[cside]])
+            #cside += 1
+        #pconnections2.append([p2conx[i], p2cony[i], p2conz[i]])
+
+    count = 0
+    acount = 1
+    mol = 1
+    moli = 0
+    madded = 0
+    minspace = 5
+    spacecount = minspace
+    alldone = False
+    nc = 0
+    rcoords = np.zeros((9, 3))
+    rcoords[:, 0] = [float(i) for i in "-0.0727 -0.0765 -0.1021 -0.3087 -0.1146 -0.1044 0.2775 0.0872 0.1026".split()]
+    rcoords[:, 1] = [float(i) for i in "0.2291 0.1592 0.1602 0.0589 0.0928 0.0854 0.0797 0.1156 0.1221".split()]
+    rcoords[:, 2] = [float(i) for i in "0.2004 0.2788 0.5098 0.4941 0.6057 0.8428 0.9260 0.9730 1.2109".split()]
+    widthy = max(rcoords[:, 1]) - min(rcoords[:, 1])
+    widthx = max(rcoords[:, 0]) - min(rcoords[:, 0])
+    spacing = widthy / 2
+
+    xnegmin = min(-rcoords[:, 0])
+    xposmin = min(rcoords[:, 0])
+    diffxmin = xposmin - xnegmin
+    symmetries = np.array([[1, 1, 1], [-1, -1, -1], [1, -1 + 0.5, 1 + 0.5], [-1, 1 + 0.5, -1 + 0.5]])
+    symmetriesM = np.array([[1, 1, 1], [-1, -1, -1], [1, 1, 1], [-1, -1, -1]])
+    symmetriesA = np.array([[0.5,0,0], [0, 0.5, 1], [0, 0.5, 0], [0.5, 1, 1]]) 
+    
+    unitcell = np.zeros((len(symmetries) * len(rcoords), 3))
+    ucount = 0
+    sortedInds0 = [1, 0, 2, 4, 3, 5, 7, 6, 8]
+    sortedInds1 = [1, 0, 2, 4, 3, 5, 7, 6, 8]
+    sortedInds2 = [1, 0, 2, 4, 3, 5, 7, 6, 8]
+    sortedInds3 = [1, 0, 2, 4, 3, 5, 7, 6, 8]
+    for s in range(len(symmetries)):
+        #print("symmetries", symmetries[s])
+        for ci in range(len(rcoords)):
+            if s == 0:
+                unitcell[ucount, 1] = rcoords[sortedInds0[ci], 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
+                unitcell[ucount, 2] = (rcoords[sortedInds0[ci], 2] * symmetriesM[s, 2] + symmetriesA[s, 2])
+                unitcell[ucount, 0] = rcoords[sortedInds0[ci], 0] * symmetriesM[s, 0] + symmetriesA[s, 0]
+                ucount += 1
+
+            elif s ==1:
+                unitcell[ucount, 1] = rcoords[sortedInds1[ci], 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
+                unitcell[ucount, 2] = (rcoords[sortedInds1[ci], 2] * symmetriesM[s, 2] + symmetriesA[s, 2])
+                unitcell[ucount, 0] = rcoords[sortedInds1[ci], 0] * symmetriesM[s, 0] + symmetriesA[s, 0]
+                ucount += 1
+            elif s == 2:
+                unitcell[ucount, 1] = rcoords[sortedInds2[ci], 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
+                unitcell[ucount, 2] = (rcoords[sortedInds2[ci], 2] * symmetriesM[s, 2] + symmetriesA[s, 2])
+                unitcell[ucount, 0] = rcoords[sortedInds2[ci], 0] * symmetriesM[s, 0] + symmetriesA[s, 0]
+                ucount += 1
+            elif s == 3:
+                unitcell[ucount, 1] = rcoords[sortedInds3[ci], 1] * symmetriesM[s, 1] + symmetriesA[s, 1]
+                unitcell[ucount, 2] = (rcoords[sortedInds3[ci], 2] * symmetriesM[s, 2] + symmetriesA[s, 2])
+                unitcell[ucount, 0] = rcoords[sortedInds3[ci], 0] * symmetriesM[s, 0] + symmetriesA[s, 0]
+                ucount += 1
+
+    
+
+
+    #Reverse
+    unitcellReverse = np.copy(unitcell)
+    started = True
+    for i in range(36):
+        unitcellReverse[i,:] = list(unitcell[35-i,:])
+    sortedRInds = [0, 2, 1, 3, 5, 4, 6, 8, 7]
+    unitcellRcopy = np.copy(unitcellReverse)
+    for s in range(len(symmetries)):
+        for ci in range(len(rcoords)): 
+            unitcellReverse[s*9 + ci,:] = list(unitcellRcopy[s*9 + sortedRInds[ci],:])
+
+    """
+    for i in range(9):
+        unitcellReverse[i,:] = list(unitcell[i+27,:])
+        unitcellReverse[9+i,:] = list(unitcell[i+18,:])
+        unitcellReverse[18+i,:] = list(unitcell[i+9,:])
+        unitcellReverse[27+i,:] = list(unitcell[i,:])
+    """
+    srclist = [2, 1, 0, 3]
+    
+    avgxS0 = np.mean(unitcell[0:9,0])
+    avgyS0 = np.mean(unitcell[0:9,1])
+    avgzS0 = np.mean(unitcell[0:9,2])
+    
+    avgxS1 = np.mean(unitcell[9:18,0])
+    avgyS1 = np.mean(unitcell[9:18,1])
+    avgzS1 = np.mean(unitcell[9:18,2])
+    
+    avgxS2 = np.mean(unitcell[18:27,0])
+    avgyS2 = np.mean(unitcell[18:27,1])
+    avgzS2 = np.mean(unitcell[18:27,2])
+    
+    avgxS3 = np.mean(unitcell[27:36,0])
+    avgyS3 = np.mean(unitcell[27:36,1])
+    avgzS3 = np.mean(unitcell[27:36,2])
+
+    dist01 = ((avgxS0 - avgxS1)**2 + (avgyS0 - avgyS1)**2 + (avgzS0 - avgzS1)**2)**0.5
+    dist12 = ((avgxS2 - avgxS1)**2 + (avgyS2 - avgyS1)**2 + (avgzS2 - avgzS1)**2)**0.5
+    dist23 = ((avgxS2 - avgxS3)**2 + (avgyS2 - avgyS3)**2 + (avgzS2 - avgzS3)**2)**0.5
+
+    print("dist01", dist01, "dist12", dist12, "dist23", dist23)
+    
+
+
+
+
+
+    for i in range(Rx):
+        basex = i*a
+        if i%2 == 0:
+            Rylist = list(range(Ry))
+            reverse = False
+            unitcellnew = np.copy(unitcell)
+        else:
+            Rylist = list(range(Ry-1, -1, -1))
+            reverse = True
+            unitcellnew = np.copy(unitcellReverse)
+            #Rylist = list(range(Ry))
+        for j in Rylist:
+            basey = j*b
+            for s in range(4):
+                if (s%2 == 0):
+                    Rzlist = list(range(Rz))
+                    
+                else:
+                    Rzlist = list(range(Rz-1, -1,-1))
+                    
+                for k in Rzlist:
+                    basez = k*c
+                    
+                    
+                    for ci in range(9):
+                            if not alldone and madded == 0 and spacecount >= minspace:
+                                if not reverse:
+                                    if s == 0 and ci == 0:
+                                        started = True
+                                    elif s == 1 and ci == 0:
+                                        started = True
+                                    elif s == 2 and ci == 0:
+                                        started = True
+                                    elif s == 3 and ci == 0:
+                                        started == True
+                                else:
+                                    if s== 0 and ci == 0:
+                                        started = True
+                                    elif s == 1 and ci == 0:
+                                        started = True
+                                    elif s == 2 and ci == 0:
+                                        started = True
+                                    elif s == 3 and ci == 0:
+                                        started = True
+
+                            
+                            #x = basex + (symmetries[s][0]*a + rcoords[ci][0]*a) + xoffset*(symmetries[s][2]*c + rcoords[ci][2]*c)*a
+                            x = basex + unitcellnew[s*9 + ci,0]*a 
+                            #print("x", x,"basex", basex, "symmetries[s][0]*a", symmetries[s][0]*a, "symmetries[s][0]", symmetries[s][0])
+                            y = basey + unitcellnew[s*9 + ci,1]*b
+                            #print("y", y, "basey", basey, "symmetries[s][1]*b", symmetries[s][1]*b, "symmetries[s][1]", symmetries[s][1])
+                            #z = basez + (symmetries[s][2]*c + rcoords[ci][2]*c)*zoffset 
+                            z = basez + unitcellnew[s*9 + ci,2]*c
+                            tx = x + z*xoffset
+                            ty = y
+                            tz = z*zoffset
+                            if not alldone and madded < moleculeClist[moli] and spacecount >= minspace and started: 
+                                atomsinfo.append([acount, 1+s, 1, tx, ty, tz])
+                                acount = acount + 1
+                                madded  = madded + 1
+                                #print("madded", madded)
                                 #print("spacecount", spacecount)
                             elif (madded == 0 and spacecount < minspace):
                                 if spacecount == 0:
@@ -1121,7 +1728,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 ty = y
                                 tz = z * zoffset
                                 if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
                                     acount = acount + 1
                                     madded = madded +1
                                 count = count + 1
@@ -1134,7 +1741,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 ty = y
                                 tz = z * zoffset
                                 if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                    atomsinfo.append([acount,moli+1, 1, tx, ty, tz])
+                                    atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
                                     acount = acount + 1
                                     madded = madded + 1
                                 count = count + 1
@@ -1148,7 +1755,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 ty = y
                                 tz = z * zoffset
                                 if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
                                     acount = acount + 1
                                     madded = madded + 1
                                 count = count + 1
@@ -1163,7 +1770,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 ty = y
                                 tz = z * zoffset
                                 if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
                                     acount = acount + 1
                                     madded = madded + 1
                                 count = count + 1
@@ -1189,7 +1796,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 ty = y
                                 tz = z*zoffset
                                 if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
                                     acount = acount + 1
                                     madded = madded + 1
                                 count = count + 1
@@ -1204,7 +1811,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 ty = y
                                 tz = z*zoffset
                                 if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
                                     acount = acount + 1
                                     madded = madded + 1
                                 count = count + 1
@@ -1218,7 +1825,7 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                 ty = y 
                                 tz = z*zoffset
                                 if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
                                     acount = acount + 1
                                     madded = madded + 1
                                 count = count + 1
@@ -1231,13 +1838,13 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
                                     z = vars()["connectionsR" + str(sr+1)][ii][2]
                                 elif sr == 3:
                                     x = basex + vars()["connectionsR" + str(sr+1)][ii][0]
-                                    y = basey + vars()["connectionsR" + str(sr+1)][ii][1] - 2*b
+                                    y = basey + vars()["connectionsR" + str(sr+1)][ii][1] - b
                                     z = vars()["connectionsR" + str(sr+1)][ii][2]
                                 tx = x + z*xoffset
                                 ty = y
                                 tz = z*zoffset
                                 if not alldone and madded < moleculeClist[moli] and madded > 0:
-                                    atomsinfo.append([acount, moli+1, 1, tx, ty, tz])
+                                    atomsinfo.append([acount, 5+s, 1, tx, ty, tz])
                                     acount = acount + 1
                                     madded = madded + 1
                                 count = count + 1
@@ -1257,12 +1864,13 @@ def writeMoleculesinCrystal(xyzfile, moleculeClist, Rx, Ry, Rz):
         print("acount", acount, "nBeads+1", nBeads+1)
     atomsinfo = np.array(atomsinfo)
     writexyz(xyzfile, atomsinfo)
-    xlo = min(atomsinfo[:, 3]) - 5
-    xhi = max(atomsinfo[:, 3]) + 5
-    ylo = min(atomsinfo[:, 4]) - 5
-    yhi = max(atomsinfo[:, 4]) + 5
-    zlo = min(atomsinfo[:, 5]) - 5
-    zhi = max(atomsinfo[:, 5]) + 5
+    bspace =2
+    xlo = min(atomsinfo[:, 3]) - bspace
+    xhi = max(atomsinfo[:, 3]) + bspace
+    ylo = min(atomsinfo[:, 4]) - bspace
+    yhi = max(atomsinfo[:, 4]) + bspace
+    zlo = min(atomsinfo[:, 5]) - bspace
+    zhi = max(atomsinfo[:, 5]) + bspace
     return atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi
 
 def makeMolList(Nx, Carbons):
@@ -1366,14 +1974,24 @@ def checkForTriangles(bondsinfo, natoms):
             batom2 = int(bonds[ii+1])
             if batom2 in atomsBonds[batom1-1] or batom1 in atomsBonds[batom2-1]:
                     print("there is triangle", "atom1", i+1, "atom2", batom1, "atom3", batom2)
+
         
 
 
 def main():
     """
-    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", [100*3+2], 1, 1, 1)
-    msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    setupInfiniteSystem("test.xyz", 1, 1, 1)
     """
+    
+    atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystalNoCons("MolinCryst.xyz", [12], 1, 1, 1)
+    checkDistances(atomsinfo)
+    msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
+    bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
+    boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("MolinCryst.data")
+    msc.writelammpsdataonebondtype("MolinCrystCustomBonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    atomsinfo = readlammpsbondsPPctypes("MolinCrystCustomBonds.data", "MolinCrystCtype.data")
+    msc.writelammpsdataonebondtype("MolinCrystCtypebonds.data", boxcoords, [15.035, 14.027, 13.019], atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
+    
     """
     p613MolList = makeMolList([9, 3, 1, 8, 13, 3, 1, 1], [926, 1436, 1946, 2456, 2966, 3476, 3986, 41216])
     print("p613MolList",p613MolList)
@@ -1392,8 +2010,7 @@ def main():
     
     msc.writelammpsdataonebondtype("p613MolinCrystCtypebonds.data", boxcoords, [15.035, 14.027, 13.019], atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
     """
-    
-    """
+    """ 
     molList = makeMolList([9,7,1], [926,1436,3*1+2]) 
     print("molList", molList, "molecules", len(molList), "correct bonds", sum(molList) - len(molList))
     atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz", molList, 20,20,20)
@@ -1420,9 +2037,9 @@ def main():
     atomsinfo = readlammpsbondsPPctypes("p813MolinCrystCustomBonds.data", "p813MolinCrystCtype.data")
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, oldatomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("p813MolinCrystCustomBonds.data")
     msc.writelammpsdataonebondtype("p813MolinCrystCtypebonds.data", boxcoords, [15.035, 14.027, 13.019], atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
-    """
     
-    """    
+      
+    
     pMPMolList = makeMolList([3, 4, 10, 11, 8, 4, 1, 1, 1, 1, 1], [926, 1526, 2126, 2726, 3326, 3926, 4526, 6326, 6926, 8126, 54326])
     print("pMPMolList",pMPMolList)
     atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("pMPMolinCryst.xyz", pMPMolList, 20, 20, 20)
@@ -1435,21 +2052,22 @@ def main():
     atomsinfo = readlammpsbondsPPctypes("pMPMolinCrystCustomBonds.data", "pMPMolinCrystCtype.data")
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, oldatomsinfo, bondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("pMPMolinCrystCustomBonds.data")
     msc.writelammpsdataonebondtype("pMPMolinCrystCtypebonds.data", boxcoords, [15.035, 14.027, 13.019], atoms, bonds, angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo)
-    #readlammpsbondsPPctypes("pMPMolinCrystbonds.data", "pMPMolinCrystCtype.data")
     """
+    #readlammpsbondsPPctypes("pMPMolinCrystbonds.data", "pMPMolinCrystCtype.data")
 
+    
     #atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = writeMoleculesinCrystal("MolinCryst.xyz",[3*10 + 2, 3*10 + 2, 3*10 + 2, 10*3 + 2], 5, 5, 5)
     #msc.writelammpsdatajustatoms("MolinCryst.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     #readlammpsbondsPPctypes("MolinCrystbonds.data", "MolinCrystCtype.data")
     #readlammpsbondsPPctypes("TrialInfa1iPPbonds.data", "TrialInfa1iPPC1type.data")
+    """
     atomsinfo, xlo, xhi, ylo, yhi, zlo, zhi = setupInfiniteSystem("TrialInfa1iPP.xyz", 20, 20, 20)
     msc.writelammpsdatajustatoms("TrialInfa1iPP.data", [xlo, xhi, ylo, yhi, zlo, zhi], [15], len(atomsinfo), atomsinfo)
     checkDistances(atomsinfo)
     boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("TrialInfa1iPP.data")
     bondsinfo = checkNumberofPosBondsandAdd(atomsinfo) 
     msc.writelammpsdataonebondtype("TrialInfa1iPPbonds.data", boxcoords, masstypes, atoms, len(bondsinfo), angles, dihedrals, atomsinfo, bondsinfo, anglesinfo, dihedralsinfo) 
-
-    
+    """
     #msc.writelammpsdatajustatoms("TrialInfa1iPP.data",[xlo,xhi,ylo,yhi,zlo,zhi], [15], len(atomsinfo), atomsinfo)
     #bondsinfo = checkNumberofPosBondsandAdd(atomsinfo)
     #boxcoords, masstypes, atoms, bonds, angles, dihedrals, atomsinfo, oldbondsinfo, anglesinfo, dihedralsinfo = msc.readlammpsdata("TrialInfa1iPP.data")
